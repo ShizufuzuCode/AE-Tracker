@@ -14,6 +14,8 @@ A free, single-file tracker for the mobile game **Atlas Earth**. Download one HT
 - **Breakeven view** — shows from how many parcels your boost drops and when buying pays off again, including a "dry stretch" warning and a full tier table.
 - **Cities & mayor** — track which cities you own parcels in. Log mayor AB with a `+1` button (20 AB) and a dated history, with statistics for the last 30 / 90 / 365 days and all-time.
 - **Mini-game log** — track Warship, Bowling, Racer, Fishing, Golf, Vintage Fishing, Vintage Racer (and your own custom games) with placement and AB, plus period statistics.
+- **Expenses (real money)** — log your real spending (Atlas Bucks packages, Explorer's Club, custom categories) in € or $ with date, with period sums, per-category breakdown and an ROI line (portfolio value vs. money spent).
+- **Balance & forecast** — log payouts and your current account value to get a profit/loss figure, plus an optional future forecast that estimates upcoming parcels, monthly rent, cumulative rent and a breakeven point from your start date and acquisition rate.
 - **History** — save snapshots and follow your progress in a multi-line chart (portfolio, parcels, $/day, badges, Atlas Bucks).
 - **Fully customizable** — 5 color themes, custom accent colors, font size, show/hide and reorder sections, add your own mini games.
 - **Bilingual (DE/EN)**, a help mode with explanations on every field, and JSON export/import for backups.

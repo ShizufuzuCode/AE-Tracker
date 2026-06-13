@@ -140,6 +140,12 @@
             <option value="l" data-i="font_l"></option>
           </select>
         </div>
+        <div class="row"><label data-i="set_currency"></label>
+          <select id="setCurrency">
+            <option value="€">€ (Euro)</option>
+            <option value="$">$ (USD)</option>
+          </select>
+        </div>
         <div class="btnrow">
           <button class="secondary" onclick="resetSettings()" data-i="set_reset"></button>
           <button class="secondary" style="color:var(--red);border-color:var(--red)" onclick="clearAllData()" data-i="set_clear"></button>
@@ -158,6 +164,15 @@
         </div>
         <div id="gameChips" style="margin-top:10px"></div>
         <div class="hint" data-i="set_gamesHint"></div>
+      </div>
+      <div>
+        <div class="subh" data-i="set_expCats"></div>
+        <div class="btnrow" style="margin-top:0">
+          <input type="text" id="newExpCat" data-ph="set_expCatsPh">
+          <button class="secondary" onclick="addCustomExpCat()" data-i="set_gamesAdd"></button>
+        </div>
+        <div id="expCatChips" style="margin-top:10px"></div>
+        <div class="hint" data-i="set_expCatsHint"></div>
       </div>
     </div>
   </div>
@@ -304,6 +319,68 @@
     <div class="hint" id="mgSummary"></div>
   </div>
 
+  <!-- ============ AUSGABEN ============ -->
+  <div class="card wide" data-sec="expenses">
+    <h2><span data-i="h_expenses"></span><span class="help fhelp">?<span class="tip" data-i="t_expenses"></span></span></h2>
+    <div class="btnrow" style="margin-top:0;margin-bottom:4px;align-items:center">
+      <select id="expCat" onchange="updateAbHint()"></select>
+      <input type="date" id="expDate">
+      <input type="number" id="expAmount" min="0" step="0.01" style="width:110px" data-ph="exp_amount">
+      <span id="expCur" class="pct"></span>
+      <input type="number" id="expAB" min="0" style="width:130px" data-ph="exp_abPh">
+      <button onclick="addExpense()" data-i="exp_addBtn"></button>
+    </div>
+    <div class="hint" id="abHint" style="margin-top:0;margin-bottom:10px"></div>
+    <table>
+      <thead><tr><th data-i="th_expDate"></th><th data-i="th_expCat"></th><th data-i="th_expAmount"></th><th data-i="th_expAB"></th><th></th></tr></thead>
+      <tbody id="expBody"></tbody>
+      <tfoot><tr style="font-weight:700">
+        <td id="expTotalCell"></td><td></td>
+        <td id="expSumCell">–</td><td id="expAbSumCell"></td><td></td>
+      </tr></tfoot>
+    </table>
+    <div class="hint" id="expStats"></div>
+    <div class="hint" id="expByCat"></div>
+    <div class="hint" id="expRoi"></div>
+  </div>
+
+  <!-- ============ BILANZ & PROGNOSE ============ -->
+  <div class="card wide" data-sec="finance">
+    <h2><span data-i="h_finance"></span><span class="help fhelp">?<span class="tip" data-i="t_finance"></span></span></h2>
+    <div class="setgrid">
+      <div>
+        <div class="stat"><span data-i="fin_spent"></span><span class="val" id="finSpent">–</span></div>
+        <div class="stat"><span data-i="fin_paid"></span><span class="val" id="finPaid">–</span></div>
+        <div class="row"><label><span data-i="fin_current"></span><span class="help fhelp">?<span class="tip" data-i="t_fin_current"></span></span></label>
+          <input type="number" id="currentValue" min="0" step="0.01" value="0"><span id="finCur" class="pct"></span></div>
+        <div class="stat" style="font-size:1.05rem"><span data-i="fin_pl"></span><span class="big" id="finPL">–</span></div>
+      </div>
+      <div>
+        <div class="subh" data-i="fin_payoutsTitle"></div>
+        <div class="btnrow" style="margin-top:0;margin-bottom:8px;align-items:center">
+          <input type="date" id="payDate">
+          <input type="number" id="payAmount" min="0" step="0.01" style="width:110px" data-ph="exp_amount">
+          <span id="payCur" class="pct"></span>
+          <button onclick="addPayout()" data-i="pay_addBtn"></button>
+        </div>
+        <table>
+          <thead><tr><th data-i="th_payDate"></th><th data-i="th_payAmount"></th><th></th></tr></thead>
+          <tbody id="payBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="row" style="margin-top:14px"><label class="chk"><input type="checkbox" id="forecastEnabled"> <span data-i="fc_enable"></span><span class="help fhelp">?<span class="tip" data-i="t_forecast"></span></span></label></div>
+    <div id="forecastBox" style="display:none">
+      <div class="be-line" id="fcPpd"></div>
+      <table style="margin-top:6px">
+        <thead><tr><th data-i="th_fcWhen"></th><th data-i="th_fcParcels"></th><th data-i="th_fcMonthly"></th><th data-i="th_fcCum"></th></tr></thead>
+        <tbody id="fcBody"></tbody>
+      </table>
+      <div class="be-line" id="fcBreakeven"></div>
+      <div class="hint" data-i="fc_assume"></div>
+    </div>
+  </div>
+
   <!-- ============ VERLAUF ============ -->
   <div class="card wide" data-sec="history">
     <h2><span data-i="h_snapshots"></span><span class="help">?<span class="tip" data-i="tip_storage"></span></span></h2>
@@ -329,6 +406,13 @@
 
 </div>
 
+<div id="modalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;padding:16px">
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:480px;width:100%">
+    <div id="modalMsg" style="margin-bottom:16px;line-height:1.55;font-size:.92rem"></div>
+    <div class="btnrow" id="modalBtns" style="margin-top:0;justify-content:flex-end"></div>
+  </div>
+</div>
+
 <footer style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:24px;padding:12px;border-top:1px solid var(--border)">
   KI generated by Shizufuzu
 </footer>
@@ -336,8 +420,31 @@
 <script>
 "use strict";
 /* ====== Version & Changelog ====== */
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 const CHANGELOG = [
+  { v: "0.2.0", de: [
+      "Neu: Ausgaben-Sektion – Echtgeld-Ausgaben mit Kategorie, Betrag, Datum erfassen",
+      "Globale Währung (€ oder $) in den Einstellungen wählbar",
+      "Eigene Ausgaben-Kategorien hinzufügbar",
+      "Erhaltene AB-Menge je Ausgabe erfassbar, mit Gesamt-AB und Effektivrate (AB pro €/$)",
+      "Graue, kategorie-abhängige AB-Referenz unter dem Feld (App-/Website-Pakete, Explorer's Club, Challenges)",
+      "Zeitraum-Statistik der Ausgaben (30 / 90 / 365 Tage / Gesamt) und Summe je Kategorie",
+      "ROI-Anzeige: Portfolio-Wert vs. tatsächlich ausgegebenes Echtgeld",
+      "Neu: Bilanz & Prognose – Auszahlungen erfassen, aktuellen Kontostand eintragen",
+      "Gewinn/Verlust-Berechnung: Auszahlungen + aktueller Wert − Ausgaben",
+      "Zukunftsprognose (optional): schätzt aus Startdatum & Erwerbsrate (Parcels/Tag) künftige Parcels, $/Monat, kumulierte Miete und einen Breakeven-Zeitpunkt"
+    ], en: [
+      "New: expenses section – track real-money spending with category, amount, date",
+      "Global currency (€ or $) selectable in settings",
+      "Custom expense categories",
+      "Received AB amount per expense, with total AB and effective rate (AB per €/$)",
+      "Gray, category-aware AB reference below the field (app/website packs, Explorer's Club, Challenges)",
+      "Period statistics for expenses (30 / 90 / 365 days / total) and sum per category",
+      "ROI view: portfolio value vs. real money actually spent",
+      "New: balance & forecast – log payouts, enter current account value",
+      "Profit/loss calculation: payouts + current value − expenses",
+      "Future forecast (optional): estimates future parcels, $/month, cumulative rent and a breakeven point from start date & acquisition rate (parcels/day)"
+    ] },
   { v: "0.1.0", de: [
       "Erste öffentliche Version",
       "Parcel- & Einnahmen-Rechner mit Original-Raten (Common/Rare/Epic/Legendary)",
@@ -565,7 +672,56 @@ de: {
   set_clear: "🗑 Alle Daten löschen (localStorage leeren)",
   confirm_clear1: "Wirklich ALLE Tracker-Daten löschen?\n\nDas umfasst: Eingaben, Snapshots, Städte (inkl. Bürgermeister-Verlauf), Minispiel-Log und Einstellungen.\n\nTipp: Vorher mit „⬇ Export (JSON)“ ein Backup erstellen!",
   confirm_clear2: "Letzte Sicherheitsfrage: Daten jetzt unwiderruflich löschen?",
-  changelog_title: "Versionsverlauf"
+  changelog_title: "Versionsverlauf",
+  h_expenses: "💸 Ausgaben (Echtgeld)",
+  t_expenses: "Erfasse dein real ausgegebenes Geld (Atlas-Bucks-Pakete, Explorer's-Club-Abo usw.) mit Kategorie, Betrag und Datum. Die Währung (€ oder $) stellst du in den Einstellungen ein. Unten siehst du Summen pro Zeitraum, je Kategorie und das Verhältnis zu deinem Portfolio-Wert (ROI).",
+  exp_cat: "Kategorie", exp_amount: "Betrag", exp_addBtn: "+ Ausgabe",
+  exp_abPh: "erhaltene AB",
+  th_expDate: "Datum", th_expCat: "Kategorie", th_expAmount: "Betrag", th_expAB: "Erhaltene AB",
+  exp_abSum: " · {0} AB", exp_abRate: " · ⌀ {0} AB/{1}",
+  exp_total: "Gesamt: {0} Ausgaben", exp_sum: "Summe: {0}",
+  ref_app: "App-Pakete:", ref_web: "Website-Pakete:", ref_ec: "Explorer's Club:", ref_ch: "Challenges:",
+  exp_empty: "Noch keine Ausgaben – Kategorie, Datum und Betrag oben eintragen.",
+  exp_alert_amount: "Bitte einen Betrag größer als 0 eingeben.",
+  exp_stats: "Ausgaben – letzte 30 Tage: <b>{0}</b> • letzte 90 Tage: <b>{1}</b> • letztes Jahr: <b>{2}</b> • Gesamt: <b>{3}</b>",
+  exp_byCat: "Je Kategorie: ",
+  exp_roi: "Portfolio-Wert: <b>{0}</b> • Ausgegeben: <b>{1}</b> • Verhältnis: <b>{2}</b>",
+  exp_roiNote: "Hinweis: Der Portfolio-Wert wird in $ berechnet. Für ein exaktes Verhältnis stelle die Ausgaben-Währung auf $ (Einstellungen).",
+  catAB: "Atlas Bucks (Paket)", catExplorers: "Explorer's Club", catChallenges: "Challenges", catOther: "Sonstiges",
+  set_currency: "Währung (Ausgaben)",
+  set_expCats: "Eigene Ausgaben-Kategorien",
+  set_expCatsPh: "Name der Kategorie",
+  set_noExpCats: "Noch keine eigenen Kategorien.",
+  set_expCatsHint: "Eigene Kategorien erscheinen zusätzlich in der Auswahlliste der Ausgaben-Sektion. Beim Entfernen bleiben vorhandene Ausgaben erhalten.",
+  h_finance: "💵 Bilanz & Prognose",
+  t_finance: "Stelle deinen Echtgeld-Ausgaben die Auszahlungen und deinen aktuellen Kontostand gegenüber – daraus wird dein Gewinn/Verlust berechnet. Optional kannst du eine Zukunftsprognose aktivieren, die aus deinem Startdatum und deiner bisherigen Erwerbsrate (Parcels/Tag) künftige Einnahmen schätzt.",
+  fin_spent: "Ausgegeben (Echtgeld)",
+  fin_paid: "Ausgezahlt gesamt",
+  fin_current: "Aktueller Kontostand / Wert",
+  t_fin_current: "Was dein Account aktuell für dich wert ist – z. B. dein auszahlbares Mietguthaben oder dein geschätzter Kontostand. Fließt in die Gewinn/Verlust-Rechnung ein.",
+  fin_pl: "Gewinn / Verlust",
+  fin_payoutsTitle: "Auszahlungen",
+  pay_addBtn: "+ Auszahlung",
+  th_payDate: "Datum", th_payAmount: "Betrag",
+  pay_empty: "Noch keine Auszahlungen.",
+  fc_enable: "Zukunftsprognose aktivieren",
+  t_forecast: "Schätzt deine künftige Entwicklung: Aus Startdatum und aktuellen Parcels wird deine Erwerbsrate (Parcels/Tag) berechnet und in die Zukunft fortgeschrieben. Boost-Stufen, Badge-Boost und Boost-Stunden deiner aktuellen Einstellungen werden berücksichtigt. Nur eine grobe Schätzung!",
+  fc_noStart: "Bitte trage dein Startdatum im Account-Bereich ein, um die Prognose zu nutzen.",
+  fc_noParcels: "Bitte trage deine Parcels ein, um die Prognose zu nutzen.",
+  fc_ppd: "Erwerbsrate: ⌀ <b>{0} Parcels/Tag</b> ({1} Parcels in {2} Tagen)",
+  th_fcWhen: "Zeitpunkt", th_fcParcels: "Parcels (geschätzt)", th_fcMonthly: "Miete/Monat", th_fcCum: "Miete kumuliert",
+  fc_month: "in {0} Monaten", fc_month1: "in 1 Monat",
+  fc_breakeven: "Geschätzter Breakeven (kumulierte Miete ≥ Ausgaben): in ca. <b>{0}</b> ({1})",
+  fc_breakevenMonths: "{0} Monaten",
+  fc_breakevenNever: "Breakeven wird mit den aktuellen Werten nicht innerhalb von 50 Jahren erreicht.",
+  fc_breakevenNoSpend: "Trage Ausgaben ein, um einen Breakeven-Zeitpunkt zu schätzen.",
+  fc_assume: "Annahmen: Neue Parcels entsprechen deinem aktuellen Ø-Parcel-Wert; Boost-Stunden, Badge-Boost und Land bleiben konstant; Miete in $. Reine Schätzung ohne Gewähr.",
+  cancel: "Abbrechen",
+  import_conflictTitle: "Ältere Sicherung importieren",
+  import_conflict: "Die Importdatei stammt aus Version <b>{0}</b> und enthält die folgenden Bereiche <b>nicht</b>, in denen du aktuell Daten hast:<br><b>{1}</b><br><br>Wie möchtest du vorfahren?",
+  import_keep: "Aktuelle Daten behalten",
+  import_replace: "Durch Import ersetzen",
+  import_keepHint: "„Behalten“: Der Import überschreibt alle in der Datei enthaltenen Bereiche, deine Daten in den oben genannten neueren Bereichen bleiben aber erhalten.<br>„Ersetzen“: Es wird exakt der Stand der Datei hergestellt – die oben genannten Bereiche werden geleert."
 },
 en: {
   title_page: "Atlas Earth – Account Tracker (local)",
@@ -741,7 +897,56 @@ en: {
   set_clear: "🗑 Delete all data (clear localStorage)",
   confirm_clear1: "Really delete ALL tracker data?\n\nThis includes: inputs, snapshots, cities (incl. mayor history), mini-game log and settings.\n\nTip: create a backup first with “⬇ Export (JSON)”!",
   confirm_clear2: "Final confirmation: delete the data irreversibly now?",
-  changelog_title: "Version history"
+  changelog_title: "Version history",
+  h_expenses: "💸 Expenses (real money)",
+  t_expenses: "Track your real money spent (Atlas Bucks packages, Explorer's Club subscription, etc.) with category, amount and date. Set the currency (€ or $) in the settings. Below you see sums per period, per category and the ratio to your portfolio value (ROI).",
+  exp_cat: "Category", exp_amount: "Amount", exp_addBtn: "+ Expense",
+  exp_abPh: "AB received",
+  th_expDate: "Date", th_expCat: "Category", th_expAmount: "Amount", th_expAB: "AB received",
+  exp_abSum: " · {0} AB", exp_abRate: " · avg {0} AB/{1}",
+  exp_total: "Total: {0} expenses", exp_sum: "Sum: {0}",
+  ref_app: "App packs:", ref_web: "Website packs:", ref_ec: "Explorer's Club:", ref_ch: "Challenges:",
+  exp_empty: "No expenses yet – enter category, date and amount above.",
+  exp_alert_amount: "Please enter an amount greater than 0.",
+  exp_stats: "Expenses – last 30 days: <b>{0}</b> • last 90 days: <b>{1}</b> • last year: <b>{2}</b> • total: <b>{3}</b>",
+  exp_byCat: "Per category: ",
+  exp_roi: "Portfolio value: <b>{0}</b> • Spent: <b>{1}</b> • Ratio: <b>{2}</b>",
+  exp_roiNote: "Note: the portfolio value is calculated in $. For an exact ratio, set the expense currency to $ (settings).",
+  catAB: "Atlas Bucks (package)", catExplorers: "Explorer's Club", catChallenges: "Challenges", catOther: "Other",
+  set_currency: "Currency (expenses)",
+  set_expCats: "Custom expense categories",
+  set_expCatsPh: "Category name",
+  set_noExpCats: "No custom categories yet.",
+  set_expCatsHint: "Custom categories additionally appear in the dropdown of the expenses section. Removing one keeps existing expenses.",
+  h_finance: "💵 Balance & Forecast",
+  t_finance: "Compare your real-money expenses against your payouts and current account value – this gives you your profit/loss. Optionally enable a future forecast that estimates future earnings from your start date and acquisition rate (parcels/day).",
+  fin_spent: "Spent (real money)",
+  fin_paid: "Total paid out",
+  fin_current: "Current account value",
+  t_fin_current: "What your account is currently worth to you – e.g. your cashable rent balance or your estimated account value. Counts toward the profit/loss calculation.",
+  fin_pl: "Profit / Loss",
+  fin_payoutsTitle: "Payouts",
+  pay_addBtn: "+ Payout",
+  th_payDate: "Date", th_payAmount: "Amount",
+  pay_empty: "No payouts yet.",
+  fc_enable: "Enable future forecast",
+  t_forecast: "Estimates your future development: from your start date and current parcels, your acquisition rate (parcels/day) is calculated and projected forward. Boost tiers, badge boost and boost hours of your current settings are taken into account. Rough estimate only!",
+  fc_noStart: "Please enter your start date in the account section to use the forecast.",
+  fc_noParcels: "Please enter your parcels to use the forecast.",
+  fc_ppd: "Acquisition rate: avg <b>{0} parcels/day</b> ({1} parcels in {2} days)",
+  th_fcWhen: "When", th_fcParcels: "Parcels (est.)", th_fcMonthly: "Rent/month", th_fcCum: "Rent cumulative",
+  fc_month: "in {0} months", fc_month1: "in 1 month",
+  fc_breakeven: "Estimated breakeven (cumulative rent ≥ expenses): in approx. <b>{0}</b> ({1})",
+  fc_breakevenMonths: "{0} months",
+  fc_breakevenNever: "Breakeven is not reached within 50 years at the current values.",
+  fc_breakevenNoSpend: "Enter expenses to estimate a breakeven point.",
+  fc_assume: "Assumptions: new parcels match your current avg. parcel value; boost hours, badge boost and country stay constant; rent in $. Rough estimate, no guarantee.",
+  cancel: "Cancel",
+  import_conflictTitle: "Import older backup",
+  import_conflict: "The import file is from version <b>{0}</b> and does <b>not</b> contain the following sections, in which you currently have data:<br><b>{1}</b><br><br>How do you want to proceed?",
+  import_keep: "Keep current data",
+  import_replace: "Replace with import",
+  import_keepHint: "“Keep”: the import overwrites all sections contained in the file, but your data in the newer sections listed above is preserved.<br>“Replace”: the exact state of the file is restored – the sections listed above are cleared."
 }};
 
 const LS_PREFIX = "aet_";
@@ -768,14 +973,16 @@ function applyLang(){
   renderChartLegend();
   renderSettingsPanel();
   renderChangelog();
+  rebuildExpenseSelect();
+  updateAbHint();
   calc(); renderSnapshots(); renderCities(); renderMinigames();
 }
 
 /* ====== Eingabe-Handling + localStorage ====== */
 const FIELDS = ["common","rare","epic","legendary","landmarks","country","badges","freeBadges",
   "atlasBucks","diamonds","rentTotal","startDate","abPackage","goalAB",
-  "boostHours","overrideBoostValue","srbValue","srbHours"];
-const CHECKS = ["includeDiamonds","explorersClub","overrideBoost"];
+  "boostHours","overrideBoostValue","srbValue","srbHours","currentValue"];
+const CHECKS = ["includeDiamonds","explorersClub","overrideBoost","forecastEnabled"];
 
 function num(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v)||v<0?0:v; }
 function fmt$(v, digits){
@@ -783,6 +990,10 @@ function fmt$(v, digits){
   return "$" + v.toLocaleString(LOC(),{minimumFractionDigits:digits,maximumFractionDigits:digits});
 }
 function fmtN(v){ return v.toLocaleString(LOC()); }
+function fmtCur(v){
+  const n = v.toLocaleString(LOC(),{minimumFractionDigits:2,maximumFractionDigits:2});
+  return SETTINGS.currency==="$" ? "$"+n : n+" €";
+}
 
 function loadAll(){
   for(const f of FIELDS){
@@ -800,6 +1011,8 @@ function persistAll(){
 }
 
 /* ====== Berechnung (Formeln des Original-Rechners) ====== */
+let lastPortfolioValue = 0; // $-Wert, für ROI in der Ausgaben-Sektion
+let lastFC = null; // Prognose-Eingaben aus calc() für Bilanz & Prognose
 function calc(){
   const c=num("common"), r=num("rare"), e=num("epic"), l=num("legendary");
   const total = c+r+e+l;
@@ -869,6 +1082,7 @@ function calc(){
   const [abAmt, abCost] = document.getElementById("abPackage").value.split("|").map(Number);
   const portfolioValue = portfolioAB/abAmt*abCost + num("rentTotal");
   document.getElementById("portfolioValue").textContent = fmt$(portfolioValue,2);
+  lastPortfolioValue = portfolioValue;
   document.getElementById("investedAB").textContent = fmtN(investedAB)+" AB";
 
   // Fortschritt
@@ -901,8 +1115,11 @@ function calc(){
     total>0 ? basePerSec/total : AVG_RATE,
     document.getElementById("overrideBoost").checked);
 
+  lastFC = { total, avgRate: total>0 ? basePerSec/total : AVG_RATE, bPct, bh, country };
   persistAll();
   updateCityTotals();
+  renderExpenses(); // ROI nutzt den frisch berechneten Portfolio-Wert
+  renderFinance();  // Gewinn/Verlust + Prognose
   return { total, badges, ab: num("atlasBucks"), perDayBoosted, portfolioValue };
 }
 
@@ -1264,6 +1481,240 @@ function renderMinigames(){
     .join(" • ");
 }
 
+/* ====== Ausgaben (Echtgeld) ====== */
+// Referenz-AB je Kaufmöglichkeit (Stand atlasearthcalculator.com).
+// Format pro Zeile: { k: i18n-Label, items: [[USD-Preis, AB], ...], notes?: [Label je Eintrag] }
+const AB_REF = {
+  catAB: [
+    { k:"ref_app", items:[[4.99,100],[14.99,315],[39.99,900],[99.99,2400]] },
+    { k:"ref_web", items:[[4.99,110],[39.99,990],[99.99,2550],[199.99,5150],[499.99,12900],
+        [999.99,26000],[1999.99,54000],[4999.99,140000],[9999.99,290000],[49999.99,1490000],[99999.99,3200000]] }
+  ],
+  catExplorers: [
+    // EC ist ein Monats-Abo zu $49,99/Monat. Original-Tabelle nennt kumulative AB
+    // (1M 3.435 · 2M 6.695 · 3M 10.505) → hier als AB *pro Monat* (Differenz je Monat).
+    { k:"ref_ec", items:[[49.99,3435],[49.99,3260],[49.99,3810],[549.99,42020]], notes:["1M","2M","3M","1J"] }
+  ],
+  catChallenges: [
+    { k:"ref_ch", items:[[14.99,1030],[9.99,1030],[109.99,12360]], notes:["1×","Abo/M","Abo/J"] }
+  ]
+};
+function updateAbHint(){
+  const el = document.getElementById("abHint");
+  if(!el) return;
+  const cat = document.getElementById("expCat").value;
+  const ref = AB_REF[cat];
+  if(!ref){ el.innerHTML = ""; return; }
+  el.innerHTML = ref.map(line =>
+    `${T(line.k)} ` + line.items.map(([usd,ab],idx)=>
+      `${line.notes?line.notes[idx]+" ":""}$${usd.toLocaleString("en-US")} = ${fmtN(ab)} AB`
+    ).join(" · ")
+  ).join("<br>");
+}
+function getExpenses(){ try{ return JSON.parse(localStorage.getItem(LS_PREFIX+"expenses"))||[]; }catch(e){ return []; } }
+let expenses = getExpenses();
+function persistExpenses(){ localStorage.setItem(LS_PREFIX+"expenses", JSON.stringify(expenses)); }
+function expCatLabel(cat){ return DEFAULT_EXPENSE_CATS.includes(cat) ? T(cat) : cat; }
+function rebuildExpenseSelect(){
+  const sel = document.getElementById("expCat");
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = DEFAULT_EXPENSE_CATS.map(k=>`<option value="${k}">${T(k)}</option>`).join("")
+    + SETTINGS.customExpenseCats.map(c=>`<option value="${c.replace(/"/g,"&quot;")}">${c.replace(/</g,"&lt;")}</option>`).join("");
+  if([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+}
+function addExpense(){
+  const cat = document.getElementById("expCat").value;
+  const date = document.getElementById("expDate").value;
+  const amount = parseFloat(document.getElementById("expAmount").value);
+  const ab = parseInt(document.getElementById("expAB").value,10);
+  if(!date){ alert(T("alert_date")); return; }
+  if(isNaN(amount) || amount<=0){ alert(T("exp_alert_amount")); return; }
+  expenses.push({ id: Date.now(), date, cat, amount, ab: isNaN(ab)||ab<0?0:ab });
+  persistExpenses(); renderExpenses();
+  document.getElementById("expAmount").value = "";
+  document.getElementById("expAB").value = "";
+}
+function deleteExpense(id){
+  expenses = expenses.filter(x=>x.id!==id);
+  persistExpenses(); renderExpenses();
+}
+function renderExpenses(){
+  document.getElementById("expCur").textContent = "("+SETTINGS.currency+")";
+  const tbody = document.getElementById("expBody");
+  if(!tbody) return;
+  const sorted = expenses.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
+  tbody.innerHTML = sorted.map(x=>`<tr>
+    <td>${new Date(x.date+"T00:00").toLocaleDateString(LOC())}</td>
+    <td>${expCatLabel(x.cat).replace(/</g,"&lt;")}</td>
+    <td>${fmtCur(x.amount)}</td>
+    <td>${x.ab ? fmtN(x.ab)+" AB" : "–"}</td>
+    <td><button class="danger" title="${T("del")}" onclick="deleteExpense(${x.id})">✕</button></td>
+  </tr>`).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--muted)">${T("exp_empty")}</td></tr>`;
+
+  document.getElementById("expTotalCell").textContent = T("exp_total", expenses.length);
+  const totalSpent = expenses.reduce((s,x)=>s+x.amount,0);
+  const totalAB = expenses.reduce((s,x)=>s+(x.ab||0),0);
+  document.getElementById("expSumCell").textContent = expenses.length ? T("exp_sum", fmtCur(totalSpent)) : "–";
+  // erhaltene AB gesamt + Effektivrate (AB pro Währungseinheit)
+  let abCell = totalAB ? fmtN(totalAB)+" AB" : "";
+  if(totalAB>0 && totalSpent>0){
+    const rate = totalAB/totalSpent;
+    abCell += T("exp_abRate", rate.toLocaleString(LOC(),{maximumFractionDigits:1}), SETTINGS.currency);
+  }
+  document.getElementById("expAbSumCell").innerHTML = abCell;
+
+  // Zeitraum-Statistik
+  const cut = days => new Date(Date.now() - days*86400000).toISOString().slice(0,10);
+  const c30=cut(30), c90=cut(90), c365=cut(365);
+  let s30=0,s90=0,sY=0,sAll=0;
+  for(const x of expenses){
+    sAll+=x.amount;
+    if(x.date>=c365) sY+=x.amount;
+    if(x.date>=c90) s90+=x.amount;
+    if(x.date>=c30) s30+=x.amount;
+  }
+  document.getElementById("expStats").innerHTML = expenses.length
+    ? T("exp_stats", fmtCur(s30), fmtCur(s90), fmtCur(sY), fmtCur(sAll)) : "";
+
+  // Summe je Kategorie
+  const byCat = {};
+  for(const x of expenses){ const k = expCatLabel(x.cat); byCat[k] = (byCat[k]||0)+x.amount; }
+  document.getElementById("expByCat").innerHTML = expenses.length
+    ? T("exp_byCat") + Object.entries(byCat).sort((a,b)=>b[1]-a[1])
+        .map(([k,v])=>`${k.replace(/</g,"&lt;")}: <b>${fmtCur(v)}</b>`).join(" • ") : "";
+
+  // ROI: Portfolio-Wert ($) vs. Ausgaben
+  const roiEl = document.getElementById("expRoi");
+  if(expenses.length && totalSpent>0){
+    const ratio = lastPortfolioValue/totalSpent*100;
+    roiEl.innerHTML = T("exp_roi", fmt$(lastPortfolioValue,2), fmtCur(totalSpent), isFinite(ratio)?ratio.toFixed(1)+" %":"–")
+      + (SETTINGS.currency!=="$" ? ` <span class="hint" style="display:block">${T("exp_roiNote")}</span>` : "");
+  } else roiEl.innerHTML = "";
+}
+
+/* ----- Eigene Ausgaben-Kategorien (Einstellungen) ----- */
+function addCustomExpCat(){
+  const inp = document.getElementById("newExpCat");
+  const v = inp.value.trim();
+  if(v && !SETTINGS.customExpenseCats.includes(v) && !DEFAULT_EXPENSE_CATS.includes(v)){
+    SETTINGS.customExpenseCats.push(v);
+    saveSettings(); applySettings(); renderExpCatChips();
+  }
+  inp.value = "";
+}
+function removeCustomExpCat(i){
+  SETTINGS.customExpenseCats.splice(i,1);
+  saveSettings(); applySettings(); renderExpCatChips();
+}
+function renderExpCatChips(){
+  const el = document.getElementById("expCatChips");
+  if(!el) return;
+  el.innerHTML = SETTINGS.customExpenseCats.map((c,i)=>
+    `<span class="chip">${c.replace(/</g,"&lt;")}<button onclick="removeCustomExpCat(${i})" title="${T("del")}">✕</button></span>`
+  ).join("") || `<span class="hint">${T("set_noExpCats")}</span>`;
+}
+
+/* ====== Bilanz & Prognose ====== */
+function getPayouts(){ try{ return JSON.parse(localStorage.getItem(LS_PREFIX+"payouts"))||[]; }catch(e){ return []; } }
+let payouts = getPayouts();
+function persistPayouts(){ localStorage.setItem(LS_PREFIX+"payouts", JSON.stringify(payouts)); }
+function addPayout(){
+  const date = document.getElementById("payDate").value;
+  const amount = parseFloat(document.getElementById("payAmount").value);
+  if(!date){ alert(T("alert_date")); return; }
+  if(isNaN(amount) || amount<=0){ alert(T("exp_alert_amount")); return; }
+  payouts.push({ id: Date.now(), date, amount });
+  persistPayouts(); document.getElementById("payAmount").value = ""; calc();
+}
+function deletePayout(id){
+  payouts = payouts.filter(p=>p.id!==id);
+  persistPayouts(); calc();
+}
+// Tages-Mieteinnahme bei gegebener Parcel-Zahl (gleiche Formel wie perDayBoosted)
+function earningsDaily(parcels, avgRate, bPct, bh, country){
+  const withBadge = parcels*avgRate*(1+bPct);
+  const ab = adBoost(parcels, country);
+  return withBadge*3600*(24-bh) + withBadge*ab*3600*bh;
+}
+function renderFinance(){
+  document.getElementById("finCur").textContent = "("+SETTINGS.currency+")";
+  document.getElementById("payCur").textContent = "("+SETTINGS.currency+")";
+
+  // Auszahlungs-Tabelle
+  const payBody = document.getElementById("payBody");
+  if(payBody){
+    const sorted = payouts.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
+    payBody.innerHTML = sorted.map(p=>`<tr>
+      <td>${new Date(p.date+"T00:00").toLocaleDateString(LOC())}</td>
+      <td>${fmtCur(p.amount)}</td>
+      <td><button class="danger" title="${T("del")}" onclick="deletePayout(${p.id})">✕</button></td>
+    </tr>`).join("") || `<tr><td colspan="3" style="text-align:center;color:var(--muted)">${T("pay_empty")}</td></tr>`;
+  }
+
+  // Gewinn / Verlust
+  const spent = expenses.reduce((s,x)=>s+x.amount,0);
+  const paid = payouts.reduce((s,p)=>s+p.amount,0);
+  const current = num("currentValue");
+  const pl = paid + current - spent;
+  document.getElementById("finSpent").textContent = fmtCur(spent);
+  document.getElementById("finPaid").textContent = fmtCur(paid);
+  const plEl = document.getElementById("finPL");
+  plEl.textContent = (pl>=0?"+":"−") + fmtCur(Math.abs(pl)).replace(/^[-−]/,"");
+  plEl.style.color = pl>=0 ? "var(--accent)" : "var(--red)";
+
+  // Zukunftsprognose
+  const on = document.getElementById("forecastEnabled").checked;
+  const box = document.getElementById("forecastBox");
+  box.style.display = on ? "" : "none";
+  if(!on || !lastFC) return;
+
+  const fc = lastFC;
+  const sd = document.getElementById("startDate").value;
+  const daysPlayed = sd ? Math.max(1, Math.round((Date.now()-new Date(sd).getTime())/86400000)) : 0;
+  const ppdEl = document.getElementById("fcPpd");
+  const fcBody = document.getElementById("fcBody");
+  const beEl = document.getElementById("fcBreakeven");
+
+  if(fc.total<=0){ ppdEl.innerHTML = T("fc_noParcels"); fcBody.innerHTML=""; beEl.innerHTML=""; return; }
+  if(daysPlayed<=0){ ppdEl.innerHTML = T("fc_noStart"); fcBody.innerHTML=""; beEl.innerHTML=""; return; }
+
+  const ppd = fc.total/daysPlayed;
+  ppdEl.innerHTML = T("fc_ppd", ppd.toLocaleString(LOC(),{maximumFractionDigits:2}), fmtN(fc.total), fmtN(daysPlayed));
+
+  // Monat-für-Monat-Simulation
+  const aDPM = DAYS_PER_MONTH;
+  const horizons = [1,3,6,12,24];
+  let cum = 0; const rows = [];
+  for(let m=1; m<=24; m++){
+    const pEnd = fc.total + ppd*aDPM*m;
+    const monthly = earningsDaily(pEnd, fc.avgRate, fc.bPct, fc.bh, fc.country)*aDPM;
+    cum += monthly;
+    if(horizons.includes(m)) rows.push({ m, parcels: pEnd, monthly, cum });
+  }
+  fcBody.innerHTML = rows.map(r=>`<tr>
+    <td>${r.m===1 ? T("fc_month1") : T("fc_month", r.m)}</td>
+    <td>${fmtN(Math.round(r.parcels))}</td>
+    <td>${fmt$(r.monthly,2)}</td>
+    <td>${fmt$(r.cum,2)}</td>
+  </tr>`).join("");
+
+  // Breakeven: kumulierte Miete ($) ≥ Ausgaben
+  if(spent>0){
+    let be=null, c2=0;
+    for(let m=1; m<=600; m++){
+      const pEnd = fc.total + ppd*aDPM*m;
+      c2 += earningsDaily(pEnd, fc.avgRate, fc.bPct, fc.bh, fc.country)*aDPM;
+      if(c2>=spent){ be=m; break; }
+    }
+    if(be===null){ beEl.innerHTML = T("fc_breakevenNever"); }
+    else {
+      const when = new Date(Date.now()+be*aDPM*86400000).toLocaleDateString(LOC());
+      beEl.innerHTML = T("fc_breakeven", T("fc_breakevenMonths", be), when);
+    }
+  } else beEl.innerHTML = T("fc_breakevenNoSpend");
+}
+
 /* ====== Boost-Stufen & Breakeven ====== */
 // Stundenfaktor eines Tages: (24-bh) unboosted + bh Stunden mit Multiplikator m.
 // Tages-Einkommen = N * rate * (1+badge) * 3600 * hourFactor  →  linear in N.
@@ -1359,10 +1810,11 @@ function renderBreakeven(total, country, bh, bPct, meanRate, override){
 
 /* ====== Einstellungen (Themes, Layout, eigene Spiele) ====== */
 const DEFAULT_GAMES = ["Warship","Bowling","Racer","Fishing","Golf","Vintage Fishing","Vintage Racer"];
-const SECTION_KEYS = ["parcels","account","boost","earnings","portfolio","breakeven","cities","minigames","history"];
+const SECTION_KEYS = ["parcels","account","boost","earnings","portfolio","breakeven","cities","minigames","expenses","finance","history"];
 const SECTION_LABELS = { parcels:"sec_parcels", account:"sec_account", boost:"sec_boost",
   earnings:"h_earnings", portfolio:"h_portfolio", breakeven:"h_breakeven",
-  cities:"h_cities", minigames:"h_minigames", history:"h_snapshots" };
+  cities:"h_cities", minigames:"h_minigames", expenses:"h_expenses", finance:"h_finance", history:"h_snapshots" };
+const DEFAULT_EXPENSE_CATS = ["catAB","catExplorers","catChallenges","catOther"]; // Schlüssel → übersetzt; Custom-Kategorien sind Klartext
 const THEMES = {
   ocean:  { bg:"#0d1421", panel:"#15202f", panel2:"#1b2a3d", border:"#2b4057", text:"#e8eef5", muted:"#8fa3b8", accent:"#3ddc84", accent2:"#4db8ff" },
   forest: { bg:"#0c1510", panel:"#12201a", panel2:"#18302a", border:"#2b5747", text:"#e8f5ee", muted:"#8fb8a4", accent:"#4ade80", accent2:"#a3e635" },
@@ -1371,7 +1823,7 @@ const THEMES = {
   light:  { bg:"#eef2f7", panel:"#ffffff", panel2:"#e3eaf2", border:"#bccadb", text:"#1b2733", muted:"#5d7186", accent:"#0e9f57", accent2:"#1769aa" }
 };
 const DEFAULT_SETTINGS = { name:"", theme:"ocean", accent:"", accent2:"", fontSize:"m",
-  order:[...SECTION_KEYS], hidden:[], customGames:[] };
+  order:[...SECTION_KEYS], hidden:[], customGames:[], currency:"€", customExpenseCats:[] };
 
 function normalizeSettings(s){
   const out = { ...DEFAULT_SETTINGS, ...(s||{}) };
@@ -1383,6 +1835,9 @@ function normalizeSettings(s){
   out.hidden = out.hidden.filter(k=>SECTION_KEYS.includes(k));
   if(!Array.isArray(out.customGames)) out.customGames = [];
   out.customGames = out.customGames.map(g=>String(g)).filter(g=>g.trim()!=="");
+  if(out.currency!=="€" && out.currency!=="$") out.currency = "€";
+  if(!Array.isArray(out.customExpenseCats)) out.customExpenseCats = [];
+  out.customExpenseCats = out.customExpenseCats.map(g=>String(g)).filter(g=>g.trim()!=="");
   return out;
 }
 let SETTINGS;
@@ -1404,6 +1859,8 @@ function applySettings(){
     el.style.display = SETTINGS.hidden.includes(k) ? "none" : "";
   });
   rebuildGameSelect();
+  rebuildExpenseSelect();
+  renderExpenses(); // Währungswechsel sofort übernehmen
   if(chartSnaps.length) drawChart(chartSnaps); // Canvas-Farben ans Theme anpassen
 }
 function rebuildGameSelect(){
@@ -1423,8 +1880,10 @@ function renderSettingsPanel(){
   document.getElementById("setAccent").value  = SETTINGS.accent  || THEMES[SETTINGS.theme].accent;
   document.getElementById("setAccent2").value = SETTINGS.accent2 || THEMES[SETTINGS.theme].accent2;
   document.getElementById("setFont").value = SETTINGS.fontSize;
+  document.getElementById("setCurrency").value = SETTINGS.currency;
   renderSecList();
   renderGameChips();
+  renderExpCatChips();
 }
 function renderSecList(){
   document.getElementById("secList").innerHTML = SETTINGS.order.map((k,i)=>`<div class="sec-row">
@@ -1514,33 +1973,103 @@ function toggleHelp(){
 
 /* ====== Export / Import ====== */
 function exportData(){
-  const data = { exported: new Date().toISOString(), inputs:{}, checks:{}, snapshots: getSnapshots(), cities, minigames, settings: SETTINGS };
+  const data = { version: VERSION, exported: new Date().toISOString(), inputs:{}, checks:{}, snapshots: getSnapshots(), cities, minigames, expenses, payouts, settings: SETTINGS };
   for(const f of FIELDS) data.inputs[f] = document.getElementById(f).value;
   for(const c of CHECKS) data.checks[c] = document.getElementById(c).checked;
   const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "atlas-earth-stats-"+new Date().toISOString().slice(0,10)+".json";
+  a.download = "atlas-earth-stats-v"+VERSION+"-"+new Date().toISOString().slice(0,10)+".json";
   a.click(); URL.revokeObjectURL(a.href);
 }
+// Kleiner modaler Dialog mit beliebigen Buttons → Promise mit gewähltem Wert
+function showModal(message, buttons){
+  return new Promise(resolve=>{
+    const ov = document.getElementById("modalOverlay");
+    document.getElementById("modalMsg").innerHTML = message;
+    const bc = document.getElementById("modalBtns");
+    bc.innerHTML = "";
+    buttons.forEach(b=>{
+      const btn = document.createElement("button");
+      btn.textContent = b.label;
+      btn.className = b.primary ? "" : "secondary";
+      btn.onclick = ()=>{ ov.style.display="none"; resolve(b.value); };
+      bc.appendChild(btn);
+    });
+    ov.style.display = "flex";
+  });
+}
+
+// Deklarative Liste der Bereiche, die es in früheren Versionen noch nicht gab.
+// Für jede künftige Neuerung genügt EIN Eintrag hier – der Rest (Dialog, Keep/Replace) läuft automatisch.
+//   labelDe/labelEn : Anzeige im Import-Dialog
+//   inFile(data)    : steckt der Bereich in der Importdatei?
+//   hasData()       : hat der Nutzer aktuell Daten in diesem Bereich?
+//   apply(data)     : (optional) übernimmt den Bereich aus der Datei. Felder/Checks aus
+//                     FIELDS/CHECKS werden bereits generisch gesetzt → hier nur Arrays nötig.
+//   clear()         : leert den Bereich (für Modus „Ersetzen“, wenn er in der Datei fehlt)
+const NEWER_SECTIONS = [
+  { labelDe:"Ausgaben", labelEn:"Expenses",
+    inFile:d=>Array.isArray(d.expenses), hasData:()=>expenses.length>0,
+    apply:d=>{ expenses = d.expenses; persistExpenses(); },
+    clear:()=>{ expenses = []; persistExpenses(); } },
+  { labelDe:"Auszahlungen", labelEn:"Payouts",
+    inFile:d=>Array.isArray(d.payouts), hasData:()=>payouts.length>0,
+    apply:d=>{ payouts = d.payouts; persistPayouts(); },
+    clear:()=>{ payouts = []; persistPayouts(); } },
+  { labelDe:"Aktueller Kontostand", labelEn:"Current account value",
+    inFile:d=>!!d.inputs && d.inputs.currentValue!==undefined, hasData:()=>num("currentValue")>0,
+    clear:()=>{ document.getElementById("currentValue").value = "0"; } },
+  { labelDe:"Zukunftsprognose", labelEn:"Future forecast",
+    inFile:d=>!!d.checks && d.checks.forecastEnabled!==undefined, hasData:()=>document.getElementById("forecastEnabled").checked,
+    clear:()=>{ document.getElementById("forecastEnabled").checked = false; } }
+];
+function detectMissingNewer(data){
+  return NEWER_SECTIONS.filter(s=>!s.inFile(data) && s.hasData())
+    .map(s=> lang==="en" ? s.labelEn : s.labelDe);
+}
+
 function importData(input){
   const file = input.files[0]; if(!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try{
       const data = JSON.parse(reader.result);
+      const fileVer = data.version || "0.1.0"; // ohne Versionsfeld = vor v0.2.0
+      const missing = detectMissingNewer(data);
+      let mode = "replace"; // Standard: exakter Stand der Datei
+      if(missing.length){
+        const choice = await showModal(
+          T("import_conflict", fileVer, missing.join(", ")) + "<br><br><span class='hint' style='display:block'>"+T("import_keepHint")+"</span>",
+          [ {label:T("import_keep"), value:"keep", primary:true},
+            {label:T("import_replace"), value:"replace"},
+            {label:T("cancel"), value:"cancel"} ]);
+        if(choice==="cancel"){ input.value=""; return; }
+        mode = choice;
+      }
+
+      // --- immer vorhandene Bereiche (alle Versionen) ---
       if(data.inputs) for(const f of FIELDS) if(data.inputs[f]!==undefined) document.getElementById(f).value = data.inputs[f];
       if(data.checks) for(const c of CHECKS) if(data.checks[c]!==undefined) document.getElementById(c).checked = data.checks[c];
       if(Array.isArray(data.snapshots)) setSnapshots(data.snapshots);
       if(Array.isArray(data.cities)){ cities = data.cities; persistCities(); renderCities(); }
       if(Array.isArray(data.minigames)){ minigames = data.minigames; persistMinigames(); renderMinigames(); }
+
+      // --- neuere Bereiche: deklarativ aus NEWER_SECTIONS ---
+      // vorhanden → übernehmen; fehlt → bei „Ersetzen“ leeren, bei „Behalten“ unangetastet lassen
+      for(const s of NEWER_SECTIONS){
+        if(s.inFile(data)){ if(s.apply) s.apply(data); }
+        else if(mode==="replace") s.clear();
+      }
+
       if(data.settings){ SETTINGS = normalizeSettings(data.settings); saveSettings(); applySettings(); renderSettingsPanel(); }
+      renderExpenses();
       calc();
       alert(T("import_ok", data.snapshots?.length||0, data.cities?.length||0, data.minigames?.length||0));
     }catch(e){ alert(T("import_fail")+e.message); }
+    input.value = "";
   };
   reader.readAsText(file);
-  input.value = "";
 }
 
 /* ====== Init ====== */
@@ -1582,6 +2111,14 @@ document.getElementById("setFont").addEventListener("change", e=>{
 document.getElementById("newGame").addEventListener("keydown", e=>{
   if(e.key==="Enter") addCustomGame();
 });
+document.getElementById("setCurrency").addEventListener("change", e=>{
+  SETTINGS.currency = e.target.value; saveSettings(); applySettings();
+});
+document.getElementById("newExpCat").addEventListener("keydown", e=>{
+  if(e.key==="Enter") addCustomExpCat();
+});
+document.getElementById("expDate").value = new Date().toISOString().slice(0,10);
+document.getElementById("payDate").value = new Date().toISOString().slice(0,10);
 // Hilfe-Modus wiederherstellen (vor applyLang, damit der Button-Text stimmt)
 if(localStorage.getItem(LS_PREFIX+"showHelp")==="true") document.body.classList.add("show-help");
 // Einstellungen anwenden (Theme, Layout, Spiele), dann Sprache – ruft calc() + alle Renderer auf

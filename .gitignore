@@ -9,6 +9,9 @@ desktop.ini
 # Lokale Daten / Backups (nicht versionieren)
 atlas-earth-stats-*.json
 
+# Release-Artefakte
+*.zip
+
 # Scratch
 /tmp/
 *.log
