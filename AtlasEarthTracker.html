@@ -228,12 +228,19 @@
   <!-- ============ EINGABEN: BOOST ============ -->
   <div class="card" data-sec="boost">
     <h2>🚀 Boost</h2>
+
+    <div class="subh" data-i="boost_grpAd"></div>
     <div class="row"><label><span data-i="l_boostHours"></span><span class="help fhelp">?<span class="tip" data-i="t_boostHours"></span></span></label><input type="number" id="boostHours" min="0" max="24" step="0.5" value="24"></div>
+    <div class="stat"><span><span data-i="s_autoBoost"></span><span class="help fhelp">?<span class="tip" data-i="t_autoBoost"></span></span></span><span class="val" id="autoBoost">30×</span></div>
     <div class="row"><label class="chk"><input type="checkbox" id="overrideBoost"> <span data-i="l_overrideBoost"></span><span class="help fhelp">?<span class="tip" data-i="t_overrideBoost"></span></span></label>
       <input type="number" id="overrideBoostValue" min="1" value="30" disabled></div>
+
+    <div class="subh" style="margin-top:14px" data-i="boost_grpSRB"></div>
     <div class="row"><label><span data-i="l_srbValue"></span><span class="help fhelp">?<span class="tip" data-i="t_srbValue"></span></span></label><input type="number" id="srbValue" min="0" value="50"></div>
     <div class="row"><label><span data-i="l_srbHours"></span><span class="help fhelp">?<span class="tip" data-i="t_srbHours"></span></span></label><input type="number" id="srbHours" min="0" value="64"></div>
-    <div class="stat"><span><span data-i="s_autoBoost"></span><span class="help fhelp">?<span class="tip" data-i="t_autoBoost"></span></span></span><span class="val" id="autoBoost">30×</span></div>
+    <div class="row"><label><span data-i="l_srbBoostDay"></span><span class="help fhelp">?<span class="tip" data-i="t_srbBoostDay"></span></span></label><input type="number" id="srbBoostHoursPerDay" min="0" max="24" step="0.5" value="24"></div>
+
+    <div class="subh" style="margin-top:14px" data-i="boost_grpBadge"></div>
     <div class="stat"><span><span data-i="s_badgeBoost"></span><span class="help fhelp">?<span class="tip" data-i="t_badgeBoost"></span></span></span><span class="val" id="badgeBoost">0 %</span></div>
     <div class="stat"><span><span data-i="s_nextBadgeInfo"></span><span class="help fhelp">?<span class="tip" data-i="t_nextBadgeInfo"></span></span></span><span class="val" id="nextBadgeInfo">–</span></div>
     <div class="stat"><span><span data-i="s_nextBadgeAB"></span><span class="help fhelp">?<span class="tip" data-i="t_nextBadgeAB"></span></span></span><span class="val" id="nextBadgeAB">–</span></div>
@@ -420,8 +427,21 @@
 <script>
 "use strict";
 /* ====== Version & Changelog ====== */
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 const CHANGELOG = [
+  { v: "0.3.0", de: [
+      "SRB-Boost-Stunden pro Tag separat einstellbar (z. B. 24h während SRB, aber nur 21h normal)",
+      "Fix: Stufen-/Breakeven-Tabelle rechnet jetzt den Super Rent Boost mit ein (vorher nur normaler Ad-Boost → Breakeven zu hoch)",
+      "Bürgermeister-AB jederzeit eintragbar – auch ohne aktiven Bürgermeister-Status; der Gesamtverdienst bleibt erhalten (frühere BM-Einnahmen zählen weiter)",
+      "Amt je Stadt/Region wählbar: Bürgermeister (Stadt), Ministerpräsident (Bundesland) oder Präsident (Land)",
+      "Boost-Bereich übersichtlicher: getrennte Blöcke für Ad-Boost, Super Rent Boost und Badge-Boost; präzisere Erklärtexte (SRB-Mechanik, Ad-Boost hält 1 Std)"
+    ], en: [
+      "SRB boost hours per day now separately adjustable (e.g. 24h during SRB but only 21h normally)",
+      "Fix: tier/breakeven table now includes the Super Rent Boost (was ad boost only → breakeven too high)",
+      "Mayor AB can be entered any time – even without active mayor status; total earnings are kept (past mayor income still counts)",
+      "Office selectable per city/region: Mayor (city), Governor (state) or President (country)",
+      "Clearer boost area: separate blocks for ad boost, Super Rent Boost and badge boost; more precise help texts (SRB mechanics, ad boost lasts 1h)"
+    ] },
   { v: "0.2.0", de: [
       "Neu: Ausgaben-Sektion – Echtgeld-Ausgaben mit Kategorie, Betrag, Datum erfassen",
       "Globale Währung (€ oder $) in den Einstellungen wählbar",
@@ -539,14 +559,17 @@ de: {
   o_pkg3: "54.000 AB / $1.999", o_pkg4: "140.000 AB / $4.999,99", o_pkg5: "290.000 AB / $9.999,99",
   l_goalAB: "Ziel-AB (optional)",
   t_goalAB: "Ein <b>AB-Sparziel</b>, z. B. für die nächste Badge-Stufe. Der Tracker rechnet aus, in wie vielen Tagen du es bei deinem bisherigen Ø-Tempo erreichst.",
+  boost_grpAd: "Ad-Boost (Werbung)", boost_grpSRB: "Super Rent Boost (SRB)", boost_grpBadge: "Badge-Boost",
   l_boostHours: "Boost-Stunden pro Tag (0–24)",
-  t_boostHours: "Wie viele Stunden am Tag dein <b>Ad-Boost</b> aktiv ist (durch Werbung schauen, hält je 20 Min). 24 = rund um die Uhr geboostet, der Rest des Tages zählt unboosted.",
+  t_boostHours: "Wie viele Stunden am Tag dein <b>Ad-Boost</b> aktiv ist (durch Werbung schauen, ein Boost hält je 1 Std). 24 = rund um die Uhr geboostet (24 Ads = 1 Tag), der Rest des Tages zählt unboosted.",
   l_overrideBoost: "Ad-Boost manuell überschreiben",
   t_overrideBoost: "Normalerweise wird der Multiplikator automatisch aus Parcel-Anzahl + Land bestimmt. Hier kannst du einen <b>festen Wert</b> vorgeben, z. B. zum Vergleichen.",
   l_srbValue: "Super-Rent-Boost-Multiplikator",
   t_srbValue: "<b>Super Rent Boost</b> (SRB): zeitlich begrenzte Events, bei denen die Miete z. B. 50× zählt statt des normalen Ad-Boosts.",
   l_srbHours: "SRB-Stunden pro Monat",
   t_srbHours: "Wie viele Stunden <b>SRB-Events</b> du pro Monat mitnimmst (Standard 64). Fließt in die Monats- und Jahres-Einnahmen ein.",
+  l_srbBoostDay: "Boost-Stunden/Tag während SRB",
+  t_srbBoostDay: "Während eines SRB-Events ersetzt der <b>SRB-Multiplikator (z. B. 50×) deinen normalen Ad-Boost</b> – Voraussetzung: du bist geboostet. Hier gibst du an, wie viele Stunden/Tag du während des Events geboostet bleibst: <b>24</b> = durchgehend, weniger wenn du z. B. nachts nicht boostest. Nicht geboostete Stunden zählen 1× (kein normaler Boost während SRB).",
   s_autoBoost: "Ad-Boost (automatisch n. Parcel-Anzahl)",
   t_autoBoost: "Der Multiplikator, den du beim Werbung schauen bekommst. Er <b>sinkt</b>, je mehr Parcels du hast – die Stufen hängen vom gewählten Land ab.",
   s_badgeBoost: "Badge-Boost",
@@ -579,9 +602,11 @@ de: {
   t_avgPower: "Wie viel ein durchschnittliches Parcel von dir wert ist, gemessen in Common-Einheiten (1,00 = nur Commons; je höher, desto besser deine Seltenheiten).",
   s_parcelValue: "Gesamtwert in Common-Einheiten (Parcel Value)",
   t_parcelValue: "Deine gesamte Mietleistung ausgedrückt in „Anzahl Commons“ (inkl. Badge-Boost). Entspricht „Parcel Value“ im Online-Rechner.",
-  h_cities: "🏙️ Städte &amp; Bürgermeister",
-  t_cities: "Deine persönliche Übersicht: In welchen Städten besitzt du wie viele Parcels? Hake <b>Bürgermeister</b> an, wenn du in einer Stadt die meisten Parcels hast, und trage ein, was du dort als Bürgermeister an AB verdient hast.",
-  th_city: "Stadt", th_mayor: "Bürgermeister", th_mayorAB: "AB-Verdienst als Bürgermeister",
+  h_cities: "🏙️ Städte &amp; Ämter",
+  t_cities: "Deine persönliche Übersicht: In welchen Städten/Regionen besitzt du wie viele Parcels? Wähle dein <b>Amt</b> – Bürgermeister (Stadt), Ministerpräsident (Bundesland) oder Präsident (Land) – und trage ein, was du dort an AB verdient hast.",
+  th_city: "Stadt/Region", th_mayor: "Amt", th_mayorAB: "Amts-AB-Verdienst",
+  role_mayor: "Bürgermeister", role_governor: "Ministerpräsident", role_president: "Präsident",
+  role_mayor_abbr: "BM", role_governor_abbr: "MP", role_president_abbr: "Präs",
   btn_addCity: "+ Stadt hinzufügen",
   cityTotal: "Gesamt: {0} Städte",
   city_empty: "Noch keine Städte – mit „+ Stadt hinzufügen“ starten.",
@@ -627,13 +652,13 @@ de: {
   t_breakeven: "Der <b>Ad-Boost-Multiplikator</b> sinkt, sobald deine Parcel-Anzahl bestimmte Grenzen überschreitet. <b>Breakeven</b> = die Parcel-Anzahl in der nächsten Stufe, ab der du trotz niedrigerem Boost wieder mehr pro Tag verdienst als heute. Zwischen Grenze und Breakeven liegt eine „Durststrecke“, in der zusätzliche Parcels dein Tages-Einkommen vorübergehend senken.",
   th_beRange: "Parcels (von–bis)",
   th_beBreakeven: "Breakeven ab",
-  th_beDayMin: "$/Tag an Untergrenze",
-  th_beDayMax: "$/Tag an Obergrenze",
-  hint_breakeven: "Alle $-Werte sind Tages-Einnahmen mit deinen aktuellen Einstellungen (Boost-Stunden, Badge-Boost) und deinem Ø-Parcel-Wert. „Breakeven ab“ = so viele Parcels brauchst du in dieser Stufe, um das Tages-Einkommen vom Ende der vorherigen Stufe wieder zu erreichen; „—“ = innerhalb dieser Stufe nicht erreichbar (Breakeven liegt erst in einer späteren Stufe). Die Tabelle nutzt immer die automatischen Boost-Stufen des gewählten Landes.",
+  th_beDayMin: "Ø $/Tag an Untergrenze",
+  th_beDayMax: "Ø $/Tag an Obergrenze",
+  hint_breakeven: "Alle $-Werte sind <b>Ø Tages-Einnahmen inkl. SRB</b> (Monatsdurchschnitt) mit deinen aktuellen Einstellungen (Boost-Stunden, Badge-Boost, Super Rent Boost) und deinem Ø-Parcel-Wert. „Breakeven ab“ = so viele Parcels brauchst du in dieser Stufe, um das Tages-Einkommen vom Ende der vorherigen Stufe wieder zu erreichen; „—“ = innerhalb dieser Stufe nicht erreichbar (Breakeven liegt erst in einer späteren Stufe). Die Tabelle nutzt immer die automatischen Boost-Stufen des gewählten Landes.",
   be_current: "Aktuelle Stufe: <b>{0}–{1} Parcels → {2}× Ad-Boost</b>",
   be_currentLast: "Aktuelle Stufe: <b>ab {0} Parcels → {1}× Ad-Boost</b> (niedrigste Stufe)",
   be_youAreHere: "du bist hier ({0})",
-  be_perDayNow: "Dein aktuelles Tages-Einkommen (mit Boost): <b>{0}</b>",
+  be_perDayNow: "Dein aktuelles Ø Tages-Einkommen (inkl. Boost & SRB): <b>{0}</b>",
   be_toBoundary: "Noch <b>{0} Parcels</b> bis zur Stufengrenze bei {1}.",
   be_drop: "Beim Überschreiten der Grenze sinkt dein Ad-Boost von {0}× auf <b>{1}×</b>.",
   be_breakevenAt: "<b>Breakeven bei {0} Parcels:</b> ab dort verdienst du trotz niedrigerem Boost wieder mehr pro Tag als heute (dann {1}/Tag).",
@@ -664,12 +689,12 @@ de: {
   set_gamesHint: "Eigene Spiele erscheinen zusätzlich in der Auswahlliste der Minispiel-Sektion. Beim Entfernen bleiben vorhandene Log-Einträge erhalten.",
   set_reset: "↩ Einstellungen zurücksetzen",
   confirm_reset: "Alle Darstellungs-Einstellungen zurücksetzen? Deine Daten (Eingaben, Snapshots, Städte, Minispiele) bleiben erhalten.",
-  city_plus1_title: "+20 AB mit heutigem Datum verbuchen (1× Bürgermeister-Belohnung)",
-  city_logBtn_title: "Datierten Verlauf der Bürgermeister-AB anzeigen/verbergen",
-  city_logTitle: "Bürgermeister-AB-Verlauf: {0}",
+  city_plus1_title: "+20 AB mit heutigem Datum verbuchen (1× Amts-Belohnung)",
+  city_logBtn_title: "Datierten Verlauf der Amts-AB anzeigen/verbergen",
+  city_logTitle: "Amts-AB-Verlauf: {0}",
   city_logEmpty: "Noch keine datierten Einträge. Mit „+1“ verbuchst du 20 AB mit heutigem Datum – oder trage hier Datum und Betrag manuell ein.",
   city_logSum: "Verbucht gesamt: {0} AB ({1} Einträge)",
-  mayor_stats: "Bürgermeister-AB laut Verlauf (alle Städte) – letzte 30 Tage: <b>{0} AB</b> • letzte 90 Tage: <b>{1} AB</b> • letztes Jahr: <b>{2} AB</b> • Gesamt: <b>{3} AB</b>",
+  mayor_stats: "Amts-AB laut Verlauf (alle Städte/Regionen) – letzte 30 Tage: <b>{0} AB</b> • letzte 90 Tage: <b>{1} AB</b> • letztes Jahr: <b>{2} AB</b> • Gesamt: <b>{3} AB</b>",
   mg_stats: "Minispiel-AB – letzte 30 Tage: <b>{0} AB</b> • letzte 90 Tage: <b>{1} AB</b> • letztes Jahr: <b>{2} AB</b> • Gesamt: <b>{3} AB</b>",
   set_clear: "🗑 Alle Daten löschen (localStorage leeren)",
   confirm_clear1: "Wirklich ALLE Tracker-Daten löschen?\n\nDas umfasst: Eingaben, Snapshots, Städte (inkl. Bürgermeister-Verlauf), Minispiel-Log und Einstellungen.\n\nTipp: Vorher mit „⬇ Export (JSON)“ ein Backup erstellen!",
@@ -764,14 +789,17 @@ en: {
   o_pkg3: "54,000 AB / $1,999", o_pkg4: "140,000 AB / $4,999.99", o_pkg5: "290,000 AB / $9,999.99",
   l_goalAB: "Goal AB (optional)",
   t_goalAB: "An <b>AB savings goal</b>, e.g. for the next badge tier. The tracker calculates how many days it will take at your current pace.",
+  boost_grpAd: "Ad boost (ads)", boost_grpSRB: "Super Rent Boost (SRB)", boost_grpBadge: "Badge boost",
   l_boostHours: "Boost hours per day (0–24)",
-  t_boostHours: "How many hours per day your <b>ad boost</b> is active (by watching ads, 20 min each). 24 = boosted around the clock; the rest of the day counts unboosted.",
+  t_boostHours: "How many hours per day your <b>ad boost</b> is active (by watching ads, one boost lasts 1 hour). 24 = boosted around the clock (24 ads = 1 day); the rest of the day counts unboosted.",
   l_overrideBoost: "Override ad boost manually",
   t_overrideBoost: "Normally the multiplier is determined automatically from parcel count + country. Here you can set a <b>fixed value</b>, e.g. for comparisons.",
   l_srbValue: "Super-rent-boost multiplier",
   t_srbValue: "<b>Super Rent Boost</b> (SRB): limited-time events where rent counts e.g. 50× instead of the normal ad boost.",
   l_srbHours: "SRB hours per month",
   t_srbHours: "How many hours of <b>SRB events</b> you catch per month (default 64). Included in the monthly and yearly earnings.",
+  l_srbBoostDay: "Boost hours/day during SRB",
+  t_srbBoostDay: "During an SRB event the <b>SRB multiplier (e.g. 50×) replaces your normal ad boost</b> – as long as you're boosted. Here you set how many hours/day you stay boosted during the event: <b>24</b> = the whole time, less if you don't boost e.g. overnight. Non-boosted hours count 1× (no normal boost during SRB).",
   s_autoBoost: "Ad boost (automatic by parcel count)",
   t_autoBoost: "The multiplier you get for watching ads. It <b>decreases</b> the more parcels you own – the tiers depend on the selected country.",
   s_badgeBoost: "Badge boost",
@@ -804,9 +832,11 @@ en: {
   t_avgPower: "How much an average parcel of yours is worth, measured in Common units (1.00 = only Commons; the higher, the better your rarities).",
   s_parcelValue: "Total value in Common units (parcel value)",
   t_parcelValue: "Your total rent power expressed as a “number of Commons” (incl. badge boost). Matches “Parcel Value” in the online calculator.",
-  h_cities: "🏙️ Cities &amp; Mayor",
-  t_cities: "Your personal overview: in which cities do you own how many parcels? Check <b>Mayor</b> if you own the most parcels in a city, and enter the AB you earned there as mayor.",
-  th_city: "City", th_mayor: "Mayor", th_mayorAB: "AB earned as mayor",
+  h_cities: "🏙️ Cities &amp; Offices",
+  t_cities: "Your personal overview: in which cities/regions do you own how many parcels? Pick your <b>office</b> – Mayor (city), Governor (state) or President (country) – and enter the AB you earned there.",
+  th_city: "City/Region", th_mayor: "Office", th_mayorAB: "Office AB earned",
+  role_mayor: "Mayor", role_governor: "Governor", role_president: "President",
+  role_mayor_abbr: "May", role_governor_abbr: "Gov", role_president_abbr: "Pres",
   btn_addCity: "+ Add city",
   cityTotal: "Total: {0} cities",
   city_empty: "No cities yet – start with “+ Add city”.",
@@ -852,13 +882,13 @@ en: {
   t_breakeven: "The <b>ad-boost multiplier</b> drops once your parcel count crosses certain boundaries. <b>Breakeven</b> = the parcel count in the next tier at which you earn more per day again despite the lower boost. Between the boundary and the breakeven lies a “dry stretch” where additional parcels temporarily lower your daily earnings.",
   th_beRange: "Parcels (from–to)",
   th_beBreakeven: "Breakeven at",
-  th_beDayMin: "$/day at lower bound",
-  th_beDayMax: "$/day at upper bound",
-  hint_breakeven: "All $ values are daily earnings with your current settings (boost hours, badge boost) and your avg. parcel value. “Breakeven at” = how many parcels you need in that tier to reach the daily earnings from the end of the previous tier again; “—” = not reachable within this tier (the breakeven only comes in a later tier). The table always uses the automatic boost tiers of the selected country.",
+  th_beDayMin: "avg $/day at lower bound",
+  th_beDayMax: "avg $/day at upper bound",
+  hint_breakeven: "All $ values are <b>avg daily earnings incl. SRB</b> (monthly average) with your current settings (boost hours, badge boost, Super Rent Boost) and your avg. parcel value. “Breakeven at” = how many parcels you need in that tier to reach the daily earnings from the end of the previous tier again; “—” = not reachable within this tier (the breakeven only comes in a later tier). The table always uses the automatic boost tiers of the selected country.",
   be_current: "Current tier: <b>{0}–{1} parcels → {2}× ad boost</b>",
   be_currentLast: "Current tier: <b>{0}+ parcels → {1}× ad boost</b> (lowest tier)",
   be_youAreHere: "you are here ({0})",
-  be_perDayNow: "Your current daily earnings (boosted): <b>{0}</b>",
+  be_perDayNow: "Your current avg daily earnings (incl. boost & SRB): <b>{0}</b>",
   be_toBoundary: "<b>{0} parcels</b> left until the tier boundary at {1}.",
   be_drop: "Crossing the boundary lowers your ad boost from {0}× to <b>{1}×</b>.",
   be_breakevenAt: "<b>Breakeven at {0} parcels:</b> from there you earn more per day again despite the lower boost (then {1}/day).",
@@ -889,12 +919,12 @@ en: {
   set_gamesHint: "Custom games additionally appear in the dropdown of the mini-game section. Removing a game keeps existing log entries.",
   set_reset: "↩ Reset settings",
   confirm_reset: "Reset all appearance settings? Your data (inputs, snapshots, cities, mini games) is kept.",
-  city_plus1_title: "Log +20 AB with today's date (1× mayor reward)",
-  city_logBtn_title: "Show/hide the dated history of mayor AB",
-  city_logTitle: "Mayor AB history: {0}",
+  city_plus1_title: "Log +20 AB with today's date (1× office reward)",
+  city_logBtn_title: "Show/hide the dated history of office AB",
+  city_logTitle: "Office AB history: {0}",
   city_logEmpty: "No dated entries yet. Use “+1” to log 20 AB with today's date – or enter date and amount manually here.",
   city_logSum: "Logged total: {0} AB ({1} entries)",
-  mayor_stats: "Mayor AB per history (all cities) – last 30 days: <b>{0} AB</b> • last 90 days: <b>{1} AB</b> • last year: <b>{2} AB</b> • total: <b>{3} AB</b>",
+  mayor_stats: "Office AB per history (all cities/regions) – last 30 days: <b>{0} AB</b> • last 90 days: <b>{1} AB</b> • last year: <b>{2} AB</b> • total: <b>{3} AB</b>",
   mg_stats: "Mini-game AB – last 30 days: <b>{0} AB</b> • last 90 days: <b>{1} AB</b> • last year: <b>{2} AB</b> • total: <b>{3} AB</b>",
   set_clear: "🗑 Delete all data (clear localStorage)",
   confirm_clear1: "Really delete ALL tracker data?\n\nThis includes: inputs, snapshots, cities (incl. mayor history), mini-game log and settings.\n\nTip: create a backup first with “⬇ Export (JSON)”!",
@@ -983,7 +1013,7 @@ function applyLang(){
 /* ====== Eingabe-Handling + localStorage ====== */
 const FIELDS = ["common","rare","epic","legendary","landmarks","country","badges","freeBadges",
   "atlasBucks","diamonds","rentTotal","startDate","abPackage","goalAB",
-  "boostHours","overrideBoostValue","srbValue","srbHours","currentValue"];
+  "boostHours","overrideBoostValue","srbValue","srbHours","srbBoostHoursPerDay","currentValue"];
 const CHECKS = ["includeDiamonds","explorersClub","overrideBoost","forecastEnabled"];
 
 function num(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v)||v<0?0:v; }
@@ -1032,17 +1062,18 @@ function calc(){
 
   const bh = Math.min(24, num("boostHours"));
   const srbVal = num("srbValue"), srbHours = num("srbHours");
+  const srbHrsDay = Math.min(24, num("srbBoostHoursPerDay")); // Boost-Stunden/Tag während SRB
 
   // Pro Tag: bh Stunden geboostet, Rest unboosted (wie calcPerDay im Original)
   const perDayUnboosted = withBadge*86400;
   const perDayBoosted = withBadge*3600*(24-bh) + withBadge*boost*3600*bh;
 
-  // Monat/Jahr inkl. Super-Rent-Boost (wie setEarnings im Original)
+  // Monat/Jahr inkl. Super-Rent-Boost (während SRB gelten eigene Boost-Stunden srbHrsDay)
   const srbDaysPerMonth = srbHours/24;
-  const srbPerDay = withBadge*3600*(24-bh) + withBadge*srbVal*3600*bh;
+  const srbPerDay = withBadge*3600*(24-srbHrsDay) + withBadge*srbVal*3600*srbHrsDay;
   let perMonthBoosted = perDayBoosted*DAYS_PER_MONTH;
   let perYearBoosted = perDayBoosted*DAYS_PER_YEAR;
-  if(bh>0 && srbHours>0){
+  if(srbHours>0){
     perMonthBoosted = perDayBoosted*(DAYS_PER_MONTH-srbDaysPerMonth) + srbPerDay*srbDaysPerMonth;
     perYearBoosted  = perDayBoosted*(DAYS_PER_YEAR-srbDaysPerMonth*12) + srbPerDay*srbDaysPerMonth*12;
   }
@@ -1115,9 +1146,11 @@ function calc(){
 
   renderBreakeven(total, country, bh, bPct,
     total>0 ? basePerSec/total : AVG_RATE,
-    document.getElementById("overrideBoost").checked);
+    document.getElementById("overrideBoost").checked,
+    srbVal, srbHours, srbHrsDay);
 
-  lastFC = { total, avgRate: total>0 ? basePerSec/total : AVG_RATE, bPct, bh, country };
+  lastFC = { total, avgRate: total>0 ? basePerSec/total : AVG_RATE, bPct, bh, country,
+             srbVal, srbHrsMonth: srbHours, srbHrsDay };
   persistAll();
   updateCityTotals();
   renderExpenses(); // ROI nutzt den frisch berechneten Portfolio-Wert
@@ -1298,7 +1331,7 @@ let cities = getCities();
 function persistCities(){ localStorage.setItem(LS_PREFIX+"cities", JSON.stringify(cities)); }
 
 function addCity(){
-  cities.push({name:"", parcels:0, mayor:false, mayorAB:0});
+  cities.push({name:"", parcels:0, role:"mayor", mayorAB:0});
   persistCities(); renderCities();
   const rows = document.querySelectorAll("#cityBody input[type=text]");
   if(rows.length) rows[rows.length-1].focus();
@@ -1312,17 +1345,20 @@ function deleteCity(i){
 }
 function updateCity(i, field, value){
   if(field==="name") cities[i].name = value;
-  else if(field==="mayor"){ cities[i].mayor = value; persistCities(); renderCities(); return; }
+  else if(field==="role"){ cities[i].role = value; persistCities(); updateCityTotals(); return; }
   else cities[i][field] = Math.max(0, parseFloat(value)||0);
   persistCities(); updateCityTotals();
 }
+function cityRole(c){ return c.role || "mayor"; } // Migration: alte Einträge -> Bürgermeister
 function updateCityTotals(){
   const parcels = cities.reduce((s,c)=>s+c.parcels,0);
-  const mayors = cities.filter(c=>c.mayor).length;
-  const mayorAB = cities.reduce((s,c)=>s+(c.mayor?c.mayorAB:0),0);
+  const byRole = { mayor:0, governor:0, president:0 };
+  cities.forEach(c=>{ byRole[cityRole(c)] = (byRole[cityRole(c)]||0)+1; });
+  const mayorAB = cities.reduce((s,c)=>s+(parseFloat(c.mayorAB)||0),0); // alle Städte – auch ohne aktives Amt
   document.getElementById("cityTotalCell").textContent = T("cityTotal", cities.length);
   document.getElementById("cityParcels").textContent = fmtN(parcels);
-  document.getElementById("cityMayors").textContent = mayors+"×";
+  document.getElementById("cityMayors").textContent =
+    byRole.mayor+" "+T("role_mayor_abbr")+" · "+byRole.governor+" "+T("role_governor_abbr")+" · "+byRole.president+" "+T("role_president_abbr");
   document.getElementById("cityMayorAB").textContent = fmtN(mayorAB)+" AB";
   const total = num("common")+num("rare")+num("epic")+num("legendary");
   document.getElementById("cityHint").textContent = total>0 && parcels!==total
@@ -1409,11 +1445,14 @@ function renderCities(){
         oninput="updateCity(${i},'name',this.value)"></td>
     <td><input type="number" min="0" value="${c.parcels}" style="width:90px"
         oninput="updateCity(${i},'parcels',this.value)"></td>
-    <td style="text-align:center"><input type="checkbox" ${c.mayor?"checked":""}
-        onchange="updateCity(${i},'mayor',this.checked)"></td>
-    <td style="white-space:nowrap"><input type="number" min="0" value="${c.mayorAB}" style="width:90px" ${c.mayor?"":"disabled"}
+    <td><select onchange="updateCity(${i},'role',this.value)">
+        <option value="mayor" ${cityRole(c)==="mayor"?"selected":""}>${T("role_mayor")}</option>
+        <option value="governor" ${cityRole(c)==="governor"?"selected":""}>${T("role_governor")}</option>
+        <option value="president" ${cityRole(c)==="president"?"selected":""}>${T("role_president")}</option>
+      </select></td>
+    <td style="white-space:nowrap"><input type="number" min="0" value="${c.mayorAB}" style="width:90px"
         oninput="updateCity(${i},'mayorAB',this.value)"> AB
-      <button class="mini" ${c.mayor?"":"disabled"} title="${T("city_plus1_title")}" onclick="cityPlus(${i})">+1</button>
+      <button class="mini" title="${T("city_plus1_title")}" onclick="cityPlus(${i})">+1</button>
       <button class="mini" title="${T("city_logBtn_title")}" onclick="toggleCityLog(${i})">📅${logCount?" "+logCount:""}</button></td>
     <td><button class="danger" title="${T("del")}" onclick="deleteCity(${i})">✕</button></td>
   </tr>` + (openCityLog===i ? cityLogDetailRow(c,i) : "");
@@ -1633,11 +1672,14 @@ function deletePayout(id){
   payouts = payouts.filter(p=>p.id!==id);
   persistPayouts(); calc();
 }
-// Tages-Mieteinnahme bei gegebener Parcel-Zahl (gleiche Formel wie perDayBoosted)
-function earningsDaily(parcels, avgRate, bPct, bh, country){
-  const withBadge = parcels*avgRate*(1+bPct);
-  const ab = adBoost(parcels, country);
-  return withBadge*3600*(24-bh) + withBadge*ab*3600*bh;
+// Ø Tages-Mieteinnahme bei gegebener Parcel-Zahl – inkl. SRB-Tage (Monatsdurchschnitt)
+function earningsDaily(parcels, avgRate, bPct, bh, country, srbVal, srbHrsMonth, srbHrsDay){
+  const wb = parcels*avgRate*(1+bPct)*3600;
+  const normalDay = wb*((24-bh) + adBoost(parcels,country)*bh);
+  if(!srbHrsMonth) return normalDay;
+  const srbDpm = srbHrsMonth/24;
+  const srbDay = wb*((24-(srbHrsDay||0)) + (srbVal||0)*(srbHrsDay||0));
+  return ((DAYS_PER_MONTH - srbDpm)*normalDay + srbDpm*srbDay)/DAYS_PER_MONTH;
 }
 function renderFinance(){
   document.getElementById("finCur").textContent = "("+SETTINGS.currency+")";
@@ -1690,7 +1732,7 @@ function renderFinance(){
   let cum = 0; const rows = [];
   for(let m=1; m<=24; m++){
     const pEnd = fc.total + ppd*aDPM*m;
-    const monthly = earningsDaily(pEnd, fc.avgRate, fc.bPct, fc.bh, fc.country)*aDPM;
+    const monthly = earningsDaily(pEnd, fc.avgRate, fc.bPct, fc.bh, fc.country, fc.srbVal, fc.srbHrsMonth, fc.srbHrsDay)*aDPM;
     cum += monthly;
     if(horizons.includes(m)) rows.push({ m, parcels: pEnd, monthly, cum });
   }
@@ -1706,7 +1748,7 @@ function renderFinance(){
     let be=null, c2=0;
     for(let m=1; m<=600; m++){
       const pEnd = fc.total + ppd*aDPM*m;
-      c2 += earningsDaily(pEnd, fc.avgRate, fc.bPct, fc.bh, fc.country)*aDPM;
+      c2 += earningsDaily(pEnd, fc.avgRate, fc.bPct, fc.bh, fc.country, fc.srbVal, fc.srbHrsMonth, fc.srbHrsDay)*aDPM;
       if(c2>=spent){ be=m; break; }
     }
     if(be===null){ beEl.innerHTML = T("fc_breakevenNever"); }
@@ -1731,11 +1773,15 @@ function tierList(country){
   });
 }
 
-function renderBreakeven(total, country, bh, bPct, meanRate, override){
+function renderBreakeven(total, country, bh, bPct, meanRate, override, srbVal, srbHrsMonth, srbHrsDay){
   const sumEl = document.getElementById("beSummary");
   const body = document.getElementById("beBody");
   const tiers = tierList(country);
-  const dayEarn = (N,mult) => N * meanRate * (1+bPct) * 3600 * hourFactor(mult,bh);
+  // SRB fließt mit ein: normale Tage nutzen den Ad-Boost-Multiplikator, SRB-Tage den SRB-Wert.
+  const srbDpm = (srbHrsMonth||0)/24;                      // SRB-Tage pro Monat
+  const S = hourFactor(srbVal||0, srbHrsDay||0);           // SRB-Stundenfaktor (über Stufen konstant)
+  const g = (mult) => (DAYS_PER_MONTH - srbDpm)*hourFactor(mult,bh) + srbDpm*S; // Ø-Monatsfaktor je Stufe
+  const dayEarn = (N,mult) => N * meanRate * (1+bPct) * 3600 * g(mult) / DAYS_PER_MONTH; // Ø $/Tag inkl. SRB
   const ci = tiers.findIndex(t => total <= t.max);
 
   // ---- Stufen-Tabelle ----
@@ -1746,7 +1792,7 @@ function renderBreakeven(total, country, bh, bPct, meanRate, override){
         be = fmtN(t.min); // ohne Boost-Stunden kein Einkommensknick
       } else {
         const prev = tiers[i-1];
-        const beN = Math.ceil(prev.max * hourFactor(prev.mult,bh) / hourFactor(t.mult,bh));
+        const beN = Math.ceil(prev.max * g(prev.mult) / g(t.mult));
         be = beN<=t.max ? fmtN(Math.max(beN, t.min)) : "—";
       }
     }
@@ -1791,7 +1837,7 @@ function renderBreakeven(total, country, bh, bPct, meanRate, override){
     let beN = null, beTier = null;
     for(let i=ci+1; i<tiers.length; i++){
       const t = tiers[i];
-      let n = Math.ceil(total * hourFactor(cur.mult,bh) / hourFactor(t.mult,bh));
+      let n = Math.ceil(total * g(cur.mult) / g(t.mult));
       if(n < t.min) n = t.min;
       if(n <= t.max){ beN = n; beTier = t; break; }
     }
