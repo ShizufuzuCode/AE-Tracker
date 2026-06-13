@@ -2,109 +2,137 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Atlas Earth – Account Tracker (lokal)</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0c0d10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AE Tracker">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
 <style>
   :root{
-    --bg:#0d1421; --panel:#15202f; --panel2:#1b2a3d; --border:#2b4057;
-    --text:#e8eef5; --muted:#8fa3b8; --accent:#3ddc84; --accent2:#4db8ff;
-    --gold:#ffd166; --red:#ff6b6b;
+    --bg:#0c0d10; --panel:#15171c; --panel2:#1d2026; --border:#2a2e36;
+    --text:#e6e8ec; --muted:#878e99; --accent:#e0b24c; --accent2:#aab2bf;
+    --gold:#ffd166; --red:#e5575c;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);padding:16px}
-  h1{font-size:1.5rem;margin:0 0 4px}
-  h2{font-size:1.05rem;margin:0 0 12px;color:var(--accent2);border-bottom:1px solid var(--border);padding-bottom:6px}
-  .sub{color:var(--muted);font-size:.85rem;margin-bottom:18px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
-  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
-  .row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
-  .row label{font-size:.9rem;color:var(--muted);flex:1}
+  body{margin:0;font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);padding:26px 20px;line-height:1.5;letter-spacing:.005em;-webkit-font-smoothing:antialiased}
+  h1{font-size:1.3rem;font-weight:600;letter-spacing:-.01em;margin:0 0 5px}
+  h2{font-size:.72rem;text-transform:uppercase;letter-spacing:.15em;font-weight:600;color:var(--muted);
+    margin:0 0 16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .sub{color:var(--muted);font-size:.85rem;margin-bottom:18px;max-width:74ch}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:18px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}
+  .row label{font-size:.88rem;color:var(--muted);flex:1}
   input[type=number],input[type=date],input[type=text],select{
     background:var(--panel2);color:var(--text);border:1px solid var(--border);
-    border-radius:6px;padding:6px 8px;width:120px;text-align:right;font-size:.95rem}
+    border-radius:6px;padding:7px 9px;width:120px;text-align:right;font-size:.92rem;
+    transition:border-color .12s,box-shadow .12s}
   input[type=date]{width:150px;text-align:left}
   input[type=text]{text-align:left;width:160px}
   .pct{font-size:.8rem;color:var(--accent2)}
-  select{width:auto;max-width:220px;text-align:left}
-  input:focus,select:focus{outline:1px solid var(--accent2)}
+  select{width:auto;max-width:230px;text-align:left}
+  input:focus,select:focus{outline:none;border-color:var(--accent);
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 22%,transparent)}
   .chk{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
-  .rarity-c{color:#cfd8e3}.rarity-r{color:#4db8ff}.rarity-e{color:#c77dff}.rarity-l{color:var(--gold)}
+  .rarity-c{color:#cfd8e3}.rarity-r{color:#7fb2e6}.rarity-e{color:#b58fe0}.rarity-l{color:var(--gold)}
   table{width:100%;border-collapse:collapse;font-size:.9rem}
-  th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--border)}
+  th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--border)}
   th:first-child,td:first-child{text-align:left}
-  th{color:var(--muted);font-weight:600}
-  .big{font-size:1.4rem;font-weight:700;color:var(--accent)}
-  .stat{display:flex;justify-content:space-between;padding:5px 0;font-size:.92rem;border-bottom:1px dashed var(--border)}
+  th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:.68rem;letter-spacing:.07em}
+  .big{font-size:1.45rem;font-weight:700;color:var(--accent);letter-spacing:-.01em}
+  .stat{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0;font-size:.9rem;border-bottom:1px solid var(--border)}
   .stat span:first-child{color:var(--muted)}
   .stat .val{font-weight:600}
-  button{background:var(--accent);color:#08220f;border:none;border-radius:8px;
-    padding:9px 16px;font-weight:700;cursor:pointer;font-size:.9rem}
-  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
-  button.danger{background:none;color:var(--red);border:none;padding:2px 6px;font-size:1rem}
-  button:hover{filter:brightness(1.15)}
+  button{background:var(--accent);color:#1c1503;border:none;border-radius:7px;
+    padding:8px 15px;font-weight:600;cursor:pointer;font-size:.88rem;
+    transition:filter .12s,background .12s,border-color .12s,color .12s}
+  button.secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
+  button.secondary:hover{border-color:var(--accent);color:var(--accent)}
+  button.danger{background:none;color:var(--muted);border:none;padding:2px 6px;font-size:1rem}
+  button.danger:hover{color:var(--red)}
+  button:hover{filter:brightness(1.06)}
   .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-  .hint{font-size:.78rem;color:var(--muted);margin-top:8px;line-height:1.4}
-  canvas{width:100%;height:200px;background:var(--panel2);border-radius:8px;margin-top:10px}
+  .hint{font-size:.78rem;color:var(--muted);margin-top:8px;line-height:1.5}
+  canvas{width:100%;height:200px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;margin-top:10px}
   .delta-up{color:var(--accent);font-size:.78rem}
-  .help{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;
-    background:var(--panel2);border:1px solid var(--border);color:var(--accent2);font-size:.75rem;
-    font-weight:700;cursor:help;position:relative;margin-left:6px;vertical-align:2px}
-  .help .tip{display:none;position:absolute;left:26px;top:-10px;z-index:10;width:min(360px,70vw);
-    background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;
-    font-size:.8rem;font-weight:400;color:var(--text);text-align:left;line-height:1.55;
-    box-shadow:0 4px 16px rgba(0,0,0,.5)}
+  .help{display:inline-block;width:16px;height:16px;line-height:15px;text-align:center;border-radius:50%;
+    background:transparent;border:1px solid var(--border);color:var(--muted);font-size:.7rem;
+    font-weight:600;cursor:help;position:relative;margin-left:6px;vertical-align:1px;transition:border-color .12s,color .12s}
+  .help:hover{border-color:var(--accent);color:var(--accent)}
+  .help .tip{display:none;position:absolute;left:24px;top:-10px;z-index:10;width:min(360px,70vw);
+    background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:11px 14px;
+    font-size:.8rem;font-weight:400;color:var(--text);text-align:left;line-height:1.55;letter-spacing:0;
+    box-shadow:0 8px 26px rgba(0,0,0,.55)}
   .help:hover .tip{display:block}
-  .help .tip b{color:var(--accent2)}
+  .help .tip b{color:var(--accent)}
   .fhelp{display:none}
   body.show-help .fhelp{display:inline-block}
   .row .help .tip,.stat .help .tip{top:22px;left:-100px}
-  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
-  .topbtns{display:flex;gap:10px;flex-wrap:wrap}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+  .topbtns{display:flex;gap:8px;flex-wrap:wrap}
   .wide{grid-column:1/-1}
   .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;font-size:.85rem;color:var(--muted);align-items:center}
   .legend label{display:flex;gap:6px;align-items:center;cursor:pointer;color:var(--text)}
-  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+  .dot{width:9px;height:9px;border-radius:2px;display:inline-block;flex-shrink:0}
   #chartTip{position:absolute;display:none;background:var(--panel2);border:1px solid var(--border);
     border-radius:8px;padding:8px 10px;font-size:.78rem;pointer-events:none;z-index:5;line-height:1.6;
-    box-shadow:0 4px 12px rgba(0,0,0,.5);max-width:260px;white-space:nowrap}
+    box-shadow:0 8px 24px rgba(0,0,0,.55);max-width:260px;white-space:nowrap}
   .be-line{font-size:.9rem;margin:7px 0;line-height:1.5}
-  .be-line b{color:var(--accent2)}
+  .be-line b{color:var(--accent)}
   .be-warn b{color:var(--gold)}
-  .be-bar{position:relative;height:22px;background:var(--panel2);border:1px solid var(--border);
-    border-radius:11px;overflow:hidden;margin:8px 0;max-width:520px}
-  .be-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  .be-bar{position:relative;height:20px;background:var(--panel2);border:1px solid var(--border);
+    border-radius:6px;overflow:hidden;margin:8px 0;max-width:520px}
+  .be-fill{height:100%;background:var(--accent)}
   .be-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    font-size:.75rem;font-weight:700;text-shadow:0 1px 2px #000}
+    font-size:.75rem;font-weight:600;color:var(--text);text-shadow:0 1px 2px rgba(0,0,0,.7)}
   .setgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}
-  .subh{color:var(--accent2);font-size:.95rem;font-weight:600;margin-bottom:8px}
+  .subh{color:var(--text);font-size:.68rem;text-transform:uppercase;letter-spacing:.13em;font-weight:600;margin-bottom:10px;opacity:.9}
   .sec-row{display:flex;justify-content:space-between;align-items:center;gap:8px;
-    padding:4px 0;border-bottom:1px dashed var(--border);font-size:.9rem}
+    padding:5px 0;border-bottom:1px solid var(--border);font-size:.9rem}
   .sec-row label{display:flex;gap:8px;align-items:center;cursor:pointer}
-  .mini{background:var(--panel2);color:var(--text);border:1px solid var(--border);
-    border-radius:6px;padding:2px 8px;font-size:.8rem;cursor:pointer;font-weight:400}
+  .mini{background:transparent;color:var(--muted);border:1px solid var(--border);
+    border-radius:5px;padding:2px 8px;font-size:.8rem;cursor:pointer;font-weight:500;transition:border-color .12s,color .12s}
+  .mini:hover{border-color:var(--accent);color:var(--accent)}
   .chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);
-    border:1px solid var(--border);border-radius:14px;padding:3px 10px;font-size:.85rem;margin:0 6px 6px 0}
-  .chip button{background:none;border:none;color:var(--red);cursor:pointer;padding:0;font-size:.9rem}
+    border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:.85rem;margin:0 6px 6px 0}
+  .chip button{background:none;border:none;color:var(--muted);cursor:pointer;padding:0;font-size:.9rem}
+  .chip button:hover{color:var(--red)}
   input[type=color]{width:60px;height:30px;padding:2px;background:var(--panel2);
     border:1px solid var(--border);border-radius:6px;cursor:pointer}
   .ver-wrap{position:relative;display:inline-block}
-  .ver{display:inline-block;background:var(--panel2);border:1px solid var(--accent2);color:var(--accent2);
-    border-radius:12px;padding:2px 10px;font-size:.8rem;font-weight:600;cursor:pointer;
-    vertical-align:4px;margin-left:6px;user-select:none}
-  .ver:hover{filter:brightness(1.25)}
-  #changelog{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:20;
-    background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px;
-    width:min(440px,90vw);box-shadow:0 6px 20px rgba(0,0,0,.5);font-size:.85rem;font-weight:400}
+  .ver{display:inline-block;background:transparent;border:1px solid var(--border);color:var(--muted);
+    border-radius:6px;padding:2px 8px;font-size:.72rem;font-weight:600;cursor:pointer;letter-spacing:.03em;
+    vertical-align:3px;margin-left:8px;user-select:none;transition:border-color .12s,color .12s}
+  .ver:hover{border-color:var(--accent);color:var(--accent)}
+  #changelog{display:none;position:absolute;left:0;top:calc(100% + 8px);z-index:20;
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+    width:min(440px,90vw);box-shadow:0 12px 30px rgba(0,0,0,.6);font-size:.85rem;font-weight:400;letter-spacing:0}
   #changelog details{margin-bottom:6px}
-  #changelog summary{cursor:pointer;color:var(--accent2);font-weight:600}
+  #changelog summary{cursor:pointer;color:var(--text);font-weight:600}
   #changelog ul{margin:6px 0 4px 18px;padding:0;color:var(--muted);line-height:1.55}
+  @media (max-width:640px){
+    body{padding:14px 12px;padding-top:max(14px,env(safe-area-inset-top))}
+    .grid{grid-template-columns:1fr;gap:14px}
+    .card{padding:14px}
+    .setgrid{gap:18px}
+    /* breite Tabellen horizontal scrollbar machen statt überlaufen */
+    table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+    .topbar{margin-bottom:16px}
+    h1{font-size:1.15rem}
+  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div>
-    <h1>🌍 Atlas Earth – Account Tracker <span id="playerName" class="pct" style="font-size:1.05rem"></span><span class="ver-wrap"><span class="ver" id="verBadge" onclick="toggleChangelog()"></span><span id="changelog"></span></span></h1>
+    <h1>Atlas Earth – Account Tracker <span id="playerName" class="pct" style="font-size:1.05rem"></span><span class="ver-wrap"><span class="ver" id="verBadge" onclick="toggleChangelog()"></span><span id="changelog"></span></span></h1>
     <div class="sub" data-i="topSub"></div>
   </div>
   <div class="topbtns">
@@ -179,7 +207,7 @@
 
   <!-- ============ EINGABEN: PARCELS ============ -->
   <div class="card" data-sec="parcels">
-    <h2>🏠 Parcels</h2>
+    <h2>Parcels</h2>
     <div class="row"><label class="rarity-c">Common <span class="pct" id="pctC"></span><span class="help fhelp">?<span class="tip" data-i="t_common"></span></span></label><input type="number" id="common" min="0" value="0"></div>
     <div class="row"><label class="rarity-r">Rare <span class="pct" id="pctR"></span><span class="help fhelp">?<span class="tip" data-i="t_rare"></span></span></label><input type="number" id="rare" min="0" value="0"></div>
     <div class="row"><label class="rarity-e">Epic <span class="pct" id="pctE"></span><span class="help fhelp">?<span class="tip" data-i="t_epic"></span></span></label><input type="number" id="epic" min="0" value="0"></div>
@@ -203,7 +231,7 @@
 
   <!-- ============ EINGABEN: ACCOUNT ============ -->
   <div class="card" data-sec="account">
-    <h2>👤 Account</h2>
+    <h2>Account</h2>
     <div class="row"><label><span data-i="l_badges"></span><span class="help fhelp">?<span class="tip" data-i="t_badges"></span></span></label><input type="number" id="badges" min="0" value="0"></div>
     <div class="row"><label><span data-i="l_freeBadges"></span><span class="help fhelp">?<span class="tip" data-i="t_freeBadges"></span></span></label><input type="number" id="freeBadges" min="0" value="0"></div>
     <div class="row"><label><span data-i="l_ab"></span><span class="help fhelp">?<span class="tip" data-i="t_ab"></span></span></label><input type="number" id="atlasBucks" min="0" value="0"></div>
@@ -227,7 +255,7 @@
 
   <!-- ============ EINGABEN: BOOST ============ -->
   <div class="card" data-sec="boost">
-    <h2>🚀 Boost</h2>
+    <h2>Boost</h2>
 
     <div class="subh" data-i="boost_grpAd"></div>
     <div class="row"><label><span data-i="l_boostHours"></span><span class="help fhelp">?<span class="tip" data-i="t_boostHours"></span></span></label><input type="number" id="boostHours" min="0" max="24" step="0.5" value="24"></div>
@@ -427,8 +455,17 @@
 <script>
 "use strict";
 /* ====== Version & Changelog ====== */
-const VERSION = "0.3.0";
+const VERSION = "0.3.1";
 const CHANGELOG = [
+  { v: "0.3.1", de: [
+      "Neues, reduziertes Design: Gold-Akzent auf Fast-Schwarz, ruhige Typografie, keine Emoji in den Überschriften",
+      "Als App installierbar (PWA): offline lauffähig, „Zum Home-Bildschirm“ auf iPhone & Android",
+      "Responsives Handy-Layout (eine Spalte, breite Tabellen horizontal scrollbar)"
+    ], en: [
+      "New refined design: gold accent on near-black, calmer typography, no emoji in headings",
+      "Installable as an app (PWA): works offline, “Add to Home Screen” on iPhone & Android",
+      "Responsive mobile layout (single column, wide tables scroll horizontally)"
+    ] },
   { v: "0.3.0", de: [
       "SRB-Boost-Stunden pro Tag separat einstellbar (z. B. 24h während SRB, aber nur 21h normal)",
       "Fix: Stufen-/Breakeven-Tabelle rechnet jetzt den Super Rent Boost mit ein (vorher nur normaler Ad-Boost → Breakeven zu hoch)",
@@ -523,7 +560,7 @@ const I18N = {
 de: {
   title_page: "Atlas Earth – Account Tracker (lokal)",
   topSub: "Lokale Version – alle Daten bleiben in deinem Browser (localStorage). Raten &amp; Formeln entsprechen atlasearthcalculator.com (Stand 13.06.2026). Inoffiziell, nicht mit Atlas Reality verbunden.",
-  btnHelpOn: "❓ Hilfe einblenden", btnHelpOff: "✖ Hilfe ausblenden", btnLang: "🇬🇧 English",
+  btnHelpOn: "Hilfe einblenden", btnHelpOff: "Hilfe ausblenden", btnLang: "🇬🇧 English",
   t_common: "Anzahl deiner <b>Common</b>-Parcels (graue, häufigste Sorte). Sie haben die niedrigste Grundmiete – alle anderen Seltenheiten werden daran gemessen.",
   t_rare: "Anzahl deiner <b>Rare</b>-Parcels (blau). Bringen ca. 1,43× so viel Miete wie ein Common.",
   t_epic: "Anzahl deiner <b>Epic</b>-Parcels (lila). Bringen 2× so viel Miete wie ein Common.",
@@ -578,13 +615,13 @@ de: {
   t_nextBadgeInfo: "So viele Badges fehlen dir noch bis zur nächsten Bonus-Stufe (z. B. von 5 % auf 10 %).",
   s_nextBadgeAB: "AB-Kosten bis nächste Badge-Stufe",
   t_nextBadgeAB: "Was die fehlenden Badges kosten würden: <b>200 AB pro Badge</b>.",
-  h_earnings: "💰 Einnahmen",
+  h_earnings: "Einnahmen",
   t_earnings: "Deine berechneten Mieteinnahmen. <b>„ohne Boost“</b> = Grundmiete inkl. Badge-Bonus. <b>„mit Boost“</b> = deine Boost-Stunden/Tag mit Ad-Boost-Multiplikator, Rest des Tages unboosted; Monat/Jahr enthalten zusätzlich die SRB-Stunden.",
   th_period: "Zeitraum", th_unboosted: "ohne Boost", th_boosted: "mit Boost",
   hint_earnings: "„mit Boost“ = Boost-Stunden/Tag mit Ad-Boost-Multiplikator, Rest des Tages unboosted. Monat (365/12 Tage) und Jahr enthalten die SRB-Stunden.",
   r_sec: "Sekunde", r_hour: "Stunde", r_day: "Tag", r_week: "Woche",
   r_month: "Monat (Ø {0} T.)", r_year: "Jahr (365 T.)",
-  h_portfolio: "📊 Portfolio &amp; Fortschritt",
+  h_portfolio: "Portfolio &amp; Fortschritt",
   s_pv: "Portfolio-Wert (AB-Gegenwert + Miete)",
   t_pv: "Geschätzter $-Wert deines Accounts: investierte + aktuelle Atlas Bucks, umgerechnet zum gewählten AB-Paketkurs, plus bisher verdiente Miete. Die ersten 200 AB (Gratis-Parcels) zählen nicht mit.",
   s_invested: "Investierte Atlas Bucks (Parcels + Badges)",
@@ -602,7 +639,7 @@ de: {
   t_avgPower: "Wie viel ein durchschnittliches Parcel von dir wert ist, gemessen in Common-Einheiten (1,00 = nur Commons; je höher, desto besser deine Seltenheiten).",
   s_parcelValue: "Gesamtwert in Common-Einheiten (Parcel Value)",
   t_parcelValue: "Deine gesamte Mietleistung ausgedrückt in „Anzahl Commons“ (inkl. Badge-Boost). Entspricht „Parcel Value“ im Online-Rechner.",
-  h_cities: "🏙️ Städte &amp; Ämter",
+  h_cities: "Städte &amp; Ämter",
   t_cities: "Deine persönliche Übersicht: In welchen Städten/Regionen besitzt du wie viele Parcels? Wähle dein <b>Amt</b> – Bürgermeister (Stadt), Ministerpräsident (Bundesland) oder Präsident (Land) – und trage ein, was du dort an AB verdient hast.",
   th_city: "Stadt/Region", th_mayor: "Amt", th_mayorAB: "Amts-AB-Verdienst",
   role_mayor: "Bürgermeister", role_governor: "Ministerpräsident", role_president: "Präsident",
@@ -613,7 +650,7 @@ de: {
   city_hint: "Hinweis: {0} von {1} Parcels einer Stadt zugeordnet.",
   ph_cityName: "Stadtname",
   confirm_delCity: "Stadt „{0}“ löschen?",
-  h_minigames: "🎮 Minispiele",
+  h_minigames: "Minispiele",
   t_minigames: "Dein Minispiel-Logbuch: Spiel auswählen, Datum, Platzierung und erhaltene AB eintragen, dann <b>„+ Eintrag“</b>. Unten siehst du Gesamtzahl, Ø-Platzierung, AB-Summe und eine Statistik pro Spiel.",
   ph_place: "Platz", btn_addEntry: "+ Eintrag",
   th_date: "Datum", th_game: "Minispiel", th_place: "Platzierung", th_abGot: "Erhaltene AB",
@@ -622,9 +659,9 @@ de: {
   alert_date: "Bitte ein Datum angeben.",
   alert_place: "Bitte eine Platzierung angeben (1 = Erster).",
   mg_summary: "{0}: {1}× gespielt, Bester Platz {2}., {3} AB",
-  h_snapshots: "📈 Verlauf (Snapshots)",
+  h_snapshots: "Verlauf (Snapshots)",
   tip_storage: "<b>Wo werden meine Daten gespeichert?</b><br>Alle Eingaben und Snapshots liegen im <b>lokalen Speicher deines Browsers</b> (localStorage) – nicht in der HTML-Datei und nicht im Internet. Niemand außer dir hat Zugriff.<br><br><b>Das heißt:</b><br>• Daten bleiben beim Schließen und Neustarten erhalten.<br>• Sie sind nur in <b>diesem Browser auf diesem PC</b> sichtbar.<br>• Beim Löschen von „Cookies &amp; Websitedaten“ im Browser gehen sie <b>verloren</b>!<br><br><b>Tipp:</b> Regelmäßig „⬇ Export (JSON)“ klicken – das erstellt eine Backup-Datei, die du jederzeit per „⬆ Import“ wiederherstellen kannst (auch auf einem anderen PC).",
-  btn_snapshot: "📸 Snapshot speichern",
+  btn_snapshot: "Snapshot speichern",
   th_perDay: "$/Tag (Boost)",
   snap_hint: "Snapshots werden lokal gespeichert. Regelmäßig exportieren, falls der Browser-Speicher gelöscht wird!",
   snap_empty: "Noch keine Snapshots – Stats eingeben und „Snapshot speichern“ klicken.",
@@ -648,7 +685,7 @@ de: {
   chart_noSeries: "Keine Linie ausgewählt – oben mindestens eine Kennzahl anhaken.",
   chart_scaleHint: "Hinweis: Bei mehreren Linien wird jede Linie auf ihren eigenen Wertebereich skaliert (unterer Rand = ihr Minimum, oberer Rand = ihr Maximum). Die Achsenwerte links gelten nur, wenn genau eine Linie aktiv ist – fahre mit der Maus über das Diagramm, um exakte Werte zu sehen.",
   chart_devel: "Entwicklung (erster → letzter Snapshot): ",
-  h_breakeven: "📉 Boost-Stufen &amp; Breakeven",
+  h_breakeven: "Boost-Stufen &amp; Breakeven",
   t_breakeven: "Der <b>Ad-Boost-Multiplikator</b> sinkt, sobald deine Parcel-Anzahl bestimmte Grenzen überschreitet. <b>Breakeven</b> = die Parcel-Anzahl in der nächsten Stufe, ab der du trotz niedrigerem Boost wieder mehr pro Tag verdienst als heute. Zwischen Grenze und Breakeven liegt eine „Durststrecke“, in der zusätzliche Parcels dein Tages-Einkommen vorübergehend senken.",
   th_beRange: "Parcels (von–bis)",
   th_beBreakeven: "Breakeven ab",
@@ -668,12 +705,12 @@ de: {
   be_noBoostHours: "Du hast 0 Boost-Stunden eingestellt – ohne Ad-Boost gibt es keinen Breakeven-Effekt: Mehr Parcels sind immer besser.",
   be_overrideNote: "Hinweis: Dein manueller Ad-Boost-Override wird hier ignoriert – Tabelle und Breakeven nutzen die automatischen Stufen.",
   be_assume: "Annahme: Neue Parcels entsprechen deinem aktuellen Ø-Parcel-Wert ({0}× Common).",
-  btnSettings: "⚙️ Einstellungen",
-  h_settings: "⚙️ Einstellungen",
+  btnSettings: "Einstellungen",
+  h_settings: "Einstellungen",
   t_settings: "Hier passt du den Tracker an dich an: Name, Farbschema, Akzentfarben, Schriftgröße, sichtbare Bereiche samt Reihenfolge und eigene Minispiele. Alles wird lokal gespeichert und ist im JSON-Export enthalten.",
   set_name: "Spielername (oben angezeigt)",
   set_theme: "Farbschema",
-  theme_ocean: "Ozean (Standard)", theme_forest: "Wald", theme_violet: "Violett",
+  theme_ocean: "Edel Dunkel (Standard)", theme_forest: "Wald", theme_violet: "Violett",
   theme_amoled: "Schwarz (AMOLED)", theme_light: "Hell",
   set_accent: "Akzentfarbe 1 (Werte/Buttons)",
   set_accent2: "Akzentfarbe 2 (Überschriften)",
@@ -681,13 +718,13 @@ de: {
   font_s: "Klein", font_m: "Normal", font_l: "Groß",
   set_sections: "Bereiche &amp; Reihenfolge",
   set_sectionsHint: "Häkchen = Bereich sichtbar. Mit ▲/▼ änderst du die Reihenfolge der Bereiche auf der Seite. Ausgeblendete Bereiche rechnen im Hintergrund normal weiter.",
-  sec_parcels: "🏠 Parcels", sec_account: "👤 Account", sec_boost: "🚀 Boost",
+  sec_parcels: "Parcels", sec_account: "Account", sec_boost: "Boost",
   set_games: "Eigene Minispiele",
   set_gamesPh: "Name des Minispiels",
   set_gamesAdd: "+ Hinzufügen",
   set_noGames: "Noch keine eigenen Spiele.",
   set_gamesHint: "Eigene Spiele erscheinen zusätzlich in der Auswahlliste der Minispiel-Sektion. Beim Entfernen bleiben vorhandene Log-Einträge erhalten.",
-  set_reset: "↩ Einstellungen zurücksetzen",
+  set_reset: "Einstellungen zurücksetzen",
   confirm_reset: "Alle Darstellungs-Einstellungen zurücksetzen? Deine Daten (Eingaben, Snapshots, Städte, Minispiele) bleiben erhalten.",
   city_plus1_title: "+20 AB mit heutigem Datum verbuchen (1× Amts-Belohnung)",
   city_logBtn_title: "Datierten Verlauf der Amts-AB anzeigen/verbergen",
@@ -696,11 +733,11 @@ de: {
   city_logSum: "Verbucht gesamt: {0} AB ({1} Einträge)",
   mayor_stats: "Amts-AB laut Verlauf (alle Städte/Regionen) – letzte 30 Tage: <b>{0} AB</b> • letzte 90 Tage: <b>{1} AB</b> • letztes Jahr: <b>{2} AB</b> • Gesamt: <b>{3} AB</b>",
   mg_stats: "Minispiel-AB – letzte 30 Tage: <b>{0} AB</b> • letzte 90 Tage: <b>{1} AB</b> • letztes Jahr: <b>{2} AB</b> • Gesamt: <b>{3} AB</b>",
-  set_clear: "🗑 Alle Daten löschen (localStorage leeren)",
+  set_clear: "Alle Daten löschen (localStorage leeren)",
   confirm_clear1: "Wirklich ALLE Tracker-Daten löschen?\n\nDas umfasst: Eingaben, Snapshots, Städte (inkl. Bürgermeister-Verlauf), Minispiel-Log und Einstellungen.\n\nTipp: Vorher mit „⬇ Export (JSON)“ ein Backup erstellen!",
   confirm_clear2: "Letzte Sicherheitsfrage: Daten jetzt unwiderruflich löschen?",
   changelog_title: "Versionsverlauf",
-  h_expenses: "💸 Ausgaben (Echtgeld)",
+  h_expenses: "Ausgaben (Echtgeld)",
   t_expenses: "Erfasse dein real ausgegebenes Geld (Atlas-Bucks-Pakete, Explorer's-Club-Abo usw.) mit Kategorie, Betrag und Datum. Die Währung (€ oder $) stellst du in den Einstellungen ein. Unten siehst du Summen pro Zeitraum, je Kategorie und das Verhältnis zu deinem Portfolio-Wert (ROI).",
   exp_cat: "Kategorie", exp_amount: "Betrag", exp_addBtn: "+ Ausgabe",
   exp_abPh: "erhaltene AB",
@@ -720,7 +757,7 @@ de: {
   set_expCatsPh: "Name der Kategorie",
   set_noExpCats: "Noch keine eigenen Kategorien.",
   set_expCatsHint: "Eigene Kategorien erscheinen zusätzlich in der Auswahlliste der Ausgaben-Sektion. Beim Entfernen bleiben vorhandene Ausgaben erhalten.",
-  h_finance: "💵 Bilanz & Prognose",
+  h_finance: "Bilanz & Prognose",
   t_finance: "Stelle deinen Echtgeld-Ausgaben die Auszahlungen und deinen aktuellen Kontostand gegenüber – daraus wird dein Gewinn/Verlust berechnet. Optional kannst du eine Zukunftsprognose aktivieren, die aus deinem Startdatum und deiner bisherigen Erwerbsrate (Parcels/Tag) künftige Einnahmen schätzt.",
   fin_spent: "Ausgegeben (Echtgeld)",
   fin_paid: "Ausgezahlt gesamt",
@@ -753,7 +790,7 @@ de: {
 en: {
   title_page: "Atlas Earth – Account Tracker (local)",
   topSub: "Local version – all data stays in your browser (localStorage). Rates &amp; formulas match atlasearthcalculator.com (as of 2026-06-13). Unofficial, not affiliated with Atlas Reality.",
-  btnHelpOn: "❓ Show help", btnHelpOff: "✖ Hide help", btnLang: "🇩🇪 Deutsch",
+  btnHelpOn: "Show help", btnHelpOff: "Hide help", btnLang: "🇩🇪 Deutsch",
   t_common: "Number of your <b>Common</b> parcels (gray, most frequent type). They have the lowest base rent – all other rarities are measured against them.",
   t_rare: "Number of your <b>Rare</b> parcels (blue). Earn about 1.43× the rent of a Common.",
   t_epic: "Number of your <b>Epic</b> parcels (purple). Earn 2× the rent of a Common.",
@@ -808,13 +845,13 @@ en: {
   t_nextBadgeInfo: "How many badges you still need for the next bonus tier (e.g. from 5 % to 10 %).",
   s_nextBadgeAB: "AB cost until next badge tier",
   t_nextBadgeAB: "What the missing badges would cost: <b>200 AB per badge</b>.",
-  h_earnings: "💰 Earnings",
+  h_earnings: "Earnings",
   t_earnings: "Your calculated rent earnings. <b>“without boost”</b> = base rent incl. badge bonus. <b>“with boost”</b> = your boost hours/day with the ad-boost multiplier, rest of the day unboosted; month/year additionally include the SRB hours.",
   th_period: "Period", th_unboosted: "without boost", th_boosted: "with boost",
   hint_earnings: "“with boost” = boost hours/day with ad-boost multiplier, rest of the day unboosted. Month (365/12 days) and year include the SRB hours.",
   r_sec: "Second", r_hour: "Hour", r_day: "Day", r_week: "Week",
   r_month: "Month (avg. {0} d)", r_year: "Year (365 d)",
-  h_portfolio: "📊 Portfolio &amp; Progress",
+  h_portfolio: "Portfolio &amp; Progress",
   s_pv: "Portfolio value (AB equivalent + rent)",
   t_pv: "Estimated $ value of your account: invested + current Atlas Bucks, converted at the selected AB package rate, plus rent earned so far. The first 200 AB (free parcels) don't count.",
   s_invested: "Invested Atlas Bucks (parcels + badges)",
@@ -832,7 +869,7 @@ en: {
   t_avgPower: "How much an average parcel of yours is worth, measured in Common units (1.00 = only Commons; the higher, the better your rarities).",
   s_parcelValue: "Total value in Common units (parcel value)",
   t_parcelValue: "Your total rent power expressed as a “number of Commons” (incl. badge boost). Matches “Parcel Value” in the online calculator.",
-  h_cities: "🏙️ Cities &amp; Offices",
+  h_cities: "Cities &amp; Offices",
   t_cities: "Your personal overview: in which cities/regions do you own how many parcels? Pick your <b>office</b> – Mayor (city), Governor (state) or President (country) – and enter the AB you earned there.",
   th_city: "City/Region", th_mayor: "Office", th_mayorAB: "Office AB earned",
   role_mayor: "Mayor", role_governor: "Governor", role_president: "President",
@@ -843,7 +880,7 @@ en: {
   city_hint: "Note: {0} of {1} parcels assigned to a city.",
   ph_cityName: "City name",
   confirm_delCity: "Delete city “{0}”?",
-  h_minigames: "🎮 Mini games",
+  h_minigames: "Mini games",
   t_minigames: "Your mini-game log: pick the game, enter date, placement and AB received, then <b>“+ Add entry”</b>. Below you see the total count, avg. placement, AB sum and per-game statistics.",
   ph_place: "Rank", btn_addEntry: "+ Add entry",
   th_date: "Date", th_game: "Mini game", th_place: "Placement", th_abGot: "AB received",
@@ -852,9 +889,9 @@ en: {
   alert_date: "Please enter a date.",
   alert_place: "Please enter a placement (1 = first).",
   mg_summary: "{0}: played {1}×, best rank {2}, {3} AB",
-  h_snapshots: "📈 History (snapshots)",
+  h_snapshots: "History (snapshots)",
   tip_storage: "<b>Where is my data stored?</b><br>All inputs and snapshots live in your <b>browser's local storage</b> (localStorage) – not in the HTML file and not on the internet. Nobody but you has access.<br><br><b>That means:</b><br>• Data survives closing and restarting.<br>• It is only visible in <b>this browser on this PC</b>.<br>• Clearing “cookies &amp; site data” in the browser <b>deletes</b> it!<br><br><b>Tip:</b> Click “⬇ Export (JSON)” regularly – it creates a backup file you can restore any time via “⬆ Import” (even on another PC).",
-  btn_snapshot: "📸 Save snapshot",
+  btn_snapshot: "Save snapshot",
   th_perDay: "$/day (boost)",
   snap_hint: "Snapshots are stored locally. Export regularly in case the browser storage gets cleared!",
   snap_empty: "No snapshots yet – enter your stats and click “Save snapshot”.",
@@ -878,7 +915,7 @@ en: {
   chart_noSeries: "No line selected – tick at least one metric above.",
   chart_scaleHint: "Note: with several lines, each line is scaled to its own value range (bottom = its minimum, top = its maximum). The axis values on the left only apply when exactly one line is active – hover over the chart to see exact values.",
   chart_devel: "Development (first → last snapshot): ",
-  h_breakeven: "📉 Boost tiers &amp; breakeven",
+  h_breakeven: "Boost tiers &amp; breakeven",
   t_breakeven: "The <b>ad-boost multiplier</b> drops once your parcel count crosses certain boundaries. <b>Breakeven</b> = the parcel count in the next tier at which you earn more per day again despite the lower boost. Between the boundary and the breakeven lies a “dry stretch” where additional parcels temporarily lower your daily earnings.",
   th_beRange: "Parcels (from–to)",
   th_beBreakeven: "Breakeven at",
@@ -898,12 +935,12 @@ en: {
   be_noBoostHours: "You set 0 boost hours – without ad boost there is no breakeven effect: more parcels are always better.",
   be_overrideNote: "Note: your manual ad-boost override is ignored here – table and breakeven use the automatic tiers.",
   be_assume: "Assumption: new parcels match your current avg. parcel value ({0}× Common).",
-  btnSettings: "⚙️ Settings",
-  h_settings: "⚙️ Settings",
+  btnSettings: "Settings",
+  h_settings: "Settings",
   t_settings: "Customize the tracker here: name, color theme, accent colors, font size, visible sections including their order, and custom mini games. Everything is stored locally and included in the JSON export.",
   set_name: "Player name (shown at top)",
   set_theme: "Color theme",
-  theme_ocean: "Ocean (default)", theme_forest: "Forest", theme_violet: "Violet",
+  theme_ocean: "Refined dark (default)", theme_forest: "Forest", theme_violet: "Violet",
   theme_amoled: "Black (AMOLED)", theme_light: "Light",
   set_accent: "Accent color 1 (values/buttons)",
   set_accent2: "Accent color 2 (headings)",
@@ -911,13 +948,13 @@ en: {
   font_s: "Small", font_m: "Normal", font_l: "Large",
   set_sections: "Sections &amp; order",
   set_sectionsHint: "Checkbox = section visible. Use ▲/▼ to change the order of the sections on the page. Hidden sections keep calculating in the background.",
-  sec_parcels: "🏠 Parcels", sec_account: "👤 Account", sec_boost: "🚀 Boost",
+  sec_parcels: "Parcels", sec_account: "Account", sec_boost: "Boost",
   set_games: "Custom mini games",
   set_gamesPh: "Mini game name",
   set_gamesAdd: "+ Add",
   set_noGames: "No custom games yet.",
   set_gamesHint: "Custom games additionally appear in the dropdown of the mini-game section. Removing a game keeps existing log entries.",
-  set_reset: "↩ Reset settings",
+  set_reset: "Reset settings",
   confirm_reset: "Reset all appearance settings? Your data (inputs, snapshots, cities, mini games) is kept.",
   city_plus1_title: "Log +20 AB with today's date (1× office reward)",
   city_logBtn_title: "Show/hide the dated history of office AB",
@@ -926,11 +963,11 @@ en: {
   city_logSum: "Logged total: {0} AB ({1} entries)",
   mayor_stats: "Office AB per history (all cities/regions) – last 30 days: <b>{0} AB</b> • last 90 days: <b>{1} AB</b> • last year: <b>{2} AB</b> • total: <b>{3} AB</b>",
   mg_stats: "Mini-game AB – last 30 days: <b>{0} AB</b> • last 90 days: <b>{1} AB</b> • last year: <b>{2} AB</b> • total: <b>{3} AB</b>",
-  set_clear: "🗑 Delete all data (clear localStorage)",
+  set_clear: "Delete all data (clear localStorage)",
   confirm_clear1: "Really delete ALL tracker data?\n\nThis includes: inputs, snapshots, cities (incl. mayor history), mini-game log and settings.\n\nTip: create a backup first with “⬇ Export (JSON)”!",
   confirm_clear2: "Final confirmation: delete the data irreversibly now?",
   changelog_title: "Version history",
-  h_expenses: "💸 Expenses (real money)",
+  h_expenses: "Expenses (real money)",
   t_expenses: "Track your real money spent (Atlas Bucks packages, Explorer's Club subscription, etc.) with category, amount and date. Set the currency (€ or $) in the settings. Below you see sums per period, per category and the ratio to your portfolio value (ROI).",
   exp_cat: "Category", exp_amount: "Amount", exp_addBtn: "+ Expense",
   exp_abPh: "AB received",
@@ -950,7 +987,7 @@ en: {
   set_expCatsPh: "Category name",
   set_noExpCats: "No custom categories yet.",
   set_expCatsHint: "Custom categories additionally appear in the dropdown of the expenses section. Removing one keeps existing expenses.",
-  h_finance: "💵 Balance & Forecast",
+  h_finance: "Balance & Forecast",
   t_finance: "Compare your real-money expenses against your payouts and current account value – this gives you your profit/loss. Optionally enable a future forecast that estimates future earnings from your start date and acquisition rate (parcels/day).",
   fin_spent: "Spent (real money)",
   fin_paid: "Total paid out",
@@ -1864,7 +1901,7 @@ const SECTION_LABELS = { parcels:"sec_parcels", account:"sec_account", boost:"se
   cities:"h_cities", minigames:"h_minigames", expenses:"h_expenses", finance:"h_finance", history:"h_snapshots" };
 const DEFAULT_EXPENSE_CATS = ["catAB","catExplorers","catChallenges","catOther"]; // Schlüssel → übersetzt; Custom-Kategorien sind Klartext
 const THEMES = {
-  ocean:  { bg:"#0d1421", panel:"#15202f", panel2:"#1b2a3d", border:"#2b4057", text:"#e8eef5", muted:"#8fa3b8", accent:"#3ddc84", accent2:"#4db8ff" },
+  ocean:  { bg:"#0c0d10", panel:"#15171c", panel2:"#1d2026", border:"#2a2e36", text:"#e6e8ec", muted:"#878e99", accent:"#e0b24c", accent2:"#aab2bf" },
   forest: { bg:"#0c1510", panel:"#12201a", panel2:"#18302a", border:"#2b5747", text:"#e8f5ee", muted:"#8fb8a4", accent:"#4ade80", accent2:"#a3e635" },
   violet: { bg:"#140d21", panel:"#1d1530", panel2:"#271d40", border:"#453364", text:"#efe8f5", muted:"#a78fb8", accent:"#c77dff", accent2:"#ff7dcb" },
   amoled: { bg:"#000000", panel:"#0b0b0b", panel2:"#161616", border:"#2c2c2c", text:"#e8e8e8", muted:"#9a9a9a", accent:"#3ddc84", accent2:"#4db8ff" },
@@ -2172,6 +2209,10 @@ if(localStorage.getItem(LS_PREFIX+"showHelp")==="true") document.body.classList.
 // Einstellungen anwenden (Theme, Layout, Spiele), dann Sprache – ruft calc() + alle Renderer auf
 applySettings();
 applyLang();
+// Service Worker registrieren (nur über http/https; auf file:// inaktiv) – macht die App offline-/installierbar
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
 </script>
 </body>
 </html>

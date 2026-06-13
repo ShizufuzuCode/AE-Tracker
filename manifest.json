@@ -1,0 +1,15 @@
+{
+  "name": "Atlas Earth Tracker",
+  "short_name": "AE Tracker",
+  "description": "Unofficial Atlas Earth account tracker - earnings, boost, offices, expenses & forecast. All data stays local.",
+  "start_url": "AtlasEarthTracker.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0d10",
+  "theme_color": "#0c0d10",
+  "lang": "de",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
