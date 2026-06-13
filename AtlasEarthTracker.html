@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas Earth – Account Tracker (lokal)</title>
+<style>
+  :root{
+    --bg:#0d1421; --panel:#15202f; --panel2:#1b2a3d; --border:#2b4057;
+    --text:#e8eef5; --muted:#8fa3b8; --accent:#3ddc84; --accent2:#4db8ff;
+    --gold:#ffd166; --red:#ff6b6b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);padding:16px}
+  h1{font-size:1.5rem;margin:0 0 4px}
+  h2{font-size:1.05rem;margin:0 0 12px;color:var(--accent2);border-bottom:1px solid var(--border);padding-bottom:6px}
+  .sub{color:var(--muted);font-size:.85rem;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+  .row label{font-size:.9rem;color:var(--muted);flex:1}
+  input[type=number],input[type=date],input[type=text],select{
+    background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    border-radius:6px;padding:6px 8px;width:120px;text-align:right;font-size:.95rem}
+  input[type=date]{width:150px;text-align:left}
+  input[type=text]{text-align:left;width:160px}
+  .pct{font-size:.8rem;color:var(--accent2)}
+  select{width:auto;max-width:220px;text-align:left}
+  input:focus,select:focus{outline:1px solid var(--accent2)}
+  .chk{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--muted)}
+  .rarity-c{color:#cfd8e3}.rarity-r{color:#4db8ff}.rarity-e{color:#c77dff}.rarity-l{color:var(--gold)}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--border)}
+  th:first-child,td:first-child{text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .big{font-size:1.4rem;font-weight:700;color:var(--accent)}
+  .stat{display:flex;justify-content:space-between;padding:5px 0;font-size:.92rem;border-bottom:1px dashed var(--border)}
+  .stat span:first-child{color:var(--muted)}
+  .stat .val{font-weight:600}
+  button{background:var(--accent);color:#08220f;border:none;border-radius:8px;
+    padding:9px 16px;font-weight:700;cursor:pointer;font-size:.9rem}
+  button.secondary{background:var(--panel2);color:var(--text);border:1px solid var(--border)}
+  button.danger{background:none;color:var(--red);border:none;padding:2px 6px;font-size:1rem}
+  button:hover{filter:brightness(1.15)}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .hint{font-size:.78rem;color:var(--muted);margin-top:8px;line-height:1.4}
+  canvas{width:100%;height:200px;background:var(--panel2);border-radius:8px;margin-top:10px}
+  .delta-up{color:var(--accent);font-size:.78rem}
+  .help{display:inline-block;width:18px;height:18px;line-height:18px;text-align:center;border-radius:50%;
+    background:var(--panel2);border:1px solid var(--border);color:var(--accent2);font-size:.75rem;
+    font-weight:700;cursor:help;position:relative;margin-left:6px;vertical-align:2px}
+  .help .tip{display:none;position:absolute;left:26px;top:-10px;z-index:10;width:min(360px,70vw);
+    background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;
+    font-size:.8rem;font-weight:400;color:var(--text);text-align:left;line-height:1.55;
+    box-shadow:0 4px 16px rgba(0,0,0,.5)}
+  .help:hover .tip{display:block}
+  .help .tip b{color:var(--accent2)}
+  .fhelp{display:none}
+  body.show-help .fhelp{display:inline-block}
+  .row .help .tip,.stat .help .tip{top:22px;left:-100px}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .topbtns{display:flex;gap:10px;flex-wrap:wrap}
+  .wide{grid-column:1/-1}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;font-size:.85rem;color:var(--muted);align-items:center}
+  .legend label{display:flex;gap:6px;align-items:center;cursor:pointer;color:var(--text)}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+  #chartTip{position:absolute;display:none;background:var(--panel2);border:1px solid var(--border);
+    border-radius:8px;padding:8px 10px;font-size:.78rem;pointer-events:none;z-index:5;line-height:1.6;
+    box-shadow:0 4px 12px rgba(0,0,0,.5);max-width:260px;white-space:nowrap}
+  .be-line{font-size:.9rem;margin:7px 0;line-height:1.5}
+  .be-line b{color:var(--accent2)}
+  .be-warn b{color:var(--gold)}
+  .be-bar{position:relative;height:22px;background:var(--panel2);border:1px solid var(--border);
+    border-radius:11px;overflow:hidden;margin:8px 0;max-width:520px}
+  .be-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent))}
+  .be-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:.75rem;font-weight:700;text-shadow:0 1px 2px #000}
+  .setgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}
+  .subh{color:var(--accent2);font-size:.95rem;font-weight:600;margin-bottom:8px}
+  .sec-row{display:flex;justify-content:space-between;align-items:center;gap:8px;
+    padding:4px 0;border-bottom:1px dashed var(--border);font-size:.9rem}
+  .sec-row label{display:flex;gap:8px;align-items:center;cursor:pointer}
+  .mini{background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    border-radius:6px;padding:2px 8px;font-size:.8rem;cursor:pointer;font-weight:400}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);
+    border:1px solid var(--border);border-radius:14px;padding:3px 10px;font-size:.85rem;margin:0 6px 6px 0}
+  .chip button{background:none;border:none;color:var(--red);cursor:pointer;padding:0;font-size:.9rem}
+  input[type=color]{width:60px;height:30px;padding:2px;background:var(--panel2);
+    border:1px solid var(--border);border-radius:6px;cursor:pointer}
+  .ver-wrap{position:relative;display:inline-block}
+  .ver{display:inline-block;background:var(--panel2);border:1px solid var(--accent2);color:var(--accent2);
+    border-radius:12px;padding:2px 10px;font-size:.8rem;font-weight:600;cursor:pointer;
+    vertical-align:4px;margin-left:6px;user-select:none}
+  .ver:hover{filter:brightness(1.25)}
+  #changelog{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:20;
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 14px;
+    width:min(440px,90vw);box-shadow:0 6px 20px rgba(0,0,0,.5);font-size:.85rem;font-weight:400}
+  #changelog details{margin-bottom:6px}
+  #changelog summary{cursor:pointer;color:var(--accent2);font-weight:600}
+  #changelog ul{margin:6px 0 4px 18px;padding:0;color:var(--muted);line-height:1.55}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <h1>🌍 Atlas Earth – Account Tracker <span id="playerName" class="pct" style="font-size:1.05rem"></span><span class="ver-wrap"><span class="ver" id="verBadge" onclick="toggleChangelog()"></span><span id="changelog"></span></span></h1>
+    <div class="sub" data-i="topSub"></div>
+  </div>
+  <div class="topbtns">
+    <button class="secondary" onclick="toggleSettings()" data-i="btnSettings"></button>
+    <button class="secondary" id="langToggle" onclick="toggleLang()">🇬🇧 English</button>
+    <button class="secondary" id="helpToggle" onclick="toggleHelp()"></button>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- ============ EINSTELLUNGEN ============ -->
+  <div class="card wide" id="settingsCard" style="display:none;order:-1">
+    <h2><span data-i="h_settings"></span><span class="help fhelp">?<span class="tip" data-i="t_settings"></span></span></h2>
+    <div class="setgrid">
+      <div>
+        <div class="row"><label data-i="set_name"></label><input type="text" id="setName" style="width:180px"></div>
+        <div class="row"><label data-i="set_theme"></label>
+          <select id="setTheme">
+            <option value="ocean" data-i="theme_ocean"></option>
+            <option value="forest" data-i="theme_forest"></option>
+            <option value="violet" data-i="theme_violet"></option>
+            <option value="amoled" data-i="theme_amoled"></option>
+            <option value="light" data-i="theme_light"></option>
+          </select>
+        </div>
+        <div class="row"><label data-i="set_accent"></label><input type="color" id="setAccent"></div>
+        <div class="row"><label data-i="set_accent2"></label><input type="color" id="setAccent2"></div>
+        <div class="row"><label data-i="set_font"></label>
+          <select id="setFont">
+            <option value="s" data-i="font_s"></option>
+            <option value="m" data-i="font_m"></option>
+            <option value="l" data-i="font_l"></option>
+          </select>
+        </div>
+        <div class="btnrow">
+          <button class="secondary" onclick="resetSettings()" data-i="set_reset"></button>
+          <button class="secondary" style="color:var(--red);border-color:var(--red)" onclick="clearAllData()" data-i="set_clear"></button>
+        </div>
+      </div>
+      <div>
+        <div class="subh" data-i="set_sections"></div>
+        <div id="secList"></div>
+        <div class="hint" data-i="set_sectionsHint"></div>
+      </div>
+      <div>
+        <div class="subh" data-i="set_games"></div>
+        <div class="btnrow" style="margin-top:0">
+          <input type="text" id="newGame" data-ph="set_gamesPh">
+          <button class="secondary" onclick="addCustomGame()" data-i="set_gamesAdd"></button>
+        </div>
+        <div id="gameChips" style="margin-top:10px"></div>
+        <div class="hint" data-i="set_gamesHint"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EINGABEN: PARCELS ============ -->
+  <div class="card" data-sec="parcels">
+    <h2>🏠 Parcels</h2>
+    <div class="row"><label class="rarity-c">Common <span class="pct" id="pctC"></span><span class="help fhelp">?<span class="tip" data-i="t_common"></span></span></label><input type="number" id="common" min="0" value="0"></div>
+    <div class="row"><label class="rarity-r">Rare <span class="pct" id="pctR"></span><span class="help fhelp">?<span class="tip" data-i="t_rare"></span></span></label><input type="number" id="rare" min="0" value="0"></div>
+    <div class="row"><label class="rarity-e">Epic <span class="pct" id="pctE"></span><span class="help fhelp">?<span class="tip" data-i="t_epic"></span></span></label><input type="number" id="epic" min="0" value="0"></div>
+    <div class="row"><label class="rarity-l">Legendary <span class="pct" id="pctL"></span><span class="help fhelp">?<span class="tip" data-i="t_legendary"></span></span></label><input type="number" id="legendary" min="0" value="0"></div>
+    <div class="row"><label><span data-i="l_landmarks"></span><span class="help fhelp">?<span class="tip" data-i="t_landmarks"></span></span></label><input type="number" id="landmarks" min="0" value="0"></div>
+    <div class="row"><label><span data-i="l_country"></span><span class="help fhelp">?<span class="tip" data-i="t_country"></span></span></label>
+      <select id="country">
+        <option value="FRA" selected data-i="o_fra"></option>
+        <option value="USA">USA</option>
+        <option value="CAN" data-i="o_can"></option>
+        <option value="MEX" data-i="o_mex"></option>
+        <option value="JAP" data-i="o_jap"></option>
+        <option value="BRA" data-i="o_bra"></option>
+        <option value="SWD" data-i="o_swd"></option>
+        <option value="POL" data-i="o_pol"></option>
+      </select>
+    </div>
+    <div class="stat"><span><span data-i="s_totalParcels"></span><span class="help fhelp">?<span class="tip" data-i="t_totalParcels"></span></span></span><span class="val" id="totalParcels">0</span></div>
+    <div class="stat"><span><span data-i="s_rentShare"></span><span class="help fhelp">?<span class="tip" data-i="t_rentShare"></span></span></span><span class="val" id="rentShare">–</span></div>
+  </div>
+
+  <!-- ============ EINGABEN: ACCOUNT ============ -->
+  <div class="card" data-sec="account">
+    <h2>👤 Account</h2>
+    <div class="row"><label><span data-i="l_badges"></span><span class="help fhelp">?<span class="tip" data-i="t_badges"></span></span></label><input type="number" id="badges" min="0" value="0"></div>
+    <div class="row"><label><span data-i="l_freeBadges"></span><span class="help fhelp">?<span class="tip" data-i="t_freeBadges"></span></span></label><input type="number" id="freeBadges" min="0" value="0"></div>
+    <div class="row"><label><span data-i="l_ab"></span><span class="help fhelp">?<span class="tip" data-i="t_ab"></span></span></label><input type="number" id="atlasBucks" min="0" value="0"></div>
+    <div class="row"><label><span data-i="l_diamonds"></span><span class="help fhelp">?<span class="tip" data-i="t_diamonds"></span></span></label><input type="number" id="diamonds" min="0" value="0"></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="includeDiamonds"> <span data-i="l_inclDiamonds"></span><span class="help fhelp">?<span class="tip" data-i="t_inclDiamonds"></span></span></label></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="explorersClub"> <span data-i="l_explorers"></span><span class="help fhelp">?<span class="tip" data-i="t_explorers"></span></span></label></div>
+    <div class="row"><label><span data-i="l_rentTotal"></span><span class="help fhelp">?<span class="tip" data-i="t_rentTotal"></span></span></label><input type="number" id="rentTotal" min="0" step="0.01" value="0"></div>
+    <div class="row"><label><span data-i="l_startDate"></span><span class="help fhelp">?<span class="tip" data-i="t_startDate"></span></span></label><input type="date" id="startDate"></div>
+    <div class="row"><label><span data-i="l_abPackage"></span><span class="help fhelp">?<span class="tip" data-i="t_abPackage"></span></span></label>
+      <select id="abPackage">
+        <option value="2400|99.99" data-i="o_pkg0"></option>
+        <option value="2550|99.99" data-i="o_pkg1"></option>
+        <option value="26000|999.99" data-i="o_pkg2"></option>
+        <option value="54000|1999.00" data-i="o_pkg3"></option>
+        <option value="140000|4999.99" data-i="o_pkg4"></option>
+        <option value="290000|9999.99" data-i="o_pkg5"></option>
+      </select>
+    </div>
+    <div class="row"><label><span data-i="l_goalAB"></span><span class="help fhelp">?<span class="tip" data-i="t_goalAB"></span></span></label><input type="number" id="goalAB" min="0" value="0"></div>
+  </div>
+
+  <!-- ============ EINGABEN: BOOST ============ -->
+  <div class="card" data-sec="boost">
+    <h2>🚀 Boost</h2>
+    <div class="row"><label><span data-i="l_boostHours"></span><span class="help fhelp">?<span class="tip" data-i="t_boostHours"></span></span></label><input type="number" id="boostHours" min="0" max="24" step="0.5" value="24"></div>
+    <div class="row"><label class="chk"><input type="checkbox" id="overrideBoost"> <span data-i="l_overrideBoost"></span><span class="help fhelp">?<span class="tip" data-i="t_overrideBoost"></span></span></label>
+      <input type="number" id="overrideBoostValue" min="1" value="30" disabled></div>
+    <div class="row"><label><span data-i="l_srbValue"></span><span class="help fhelp">?<span class="tip" data-i="t_srbValue"></span></span></label><input type="number" id="srbValue" min="0" value="50"></div>
+    <div class="row"><label><span data-i="l_srbHours"></span><span class="help fhelp">?<span class="tip" data-i="t_srbHours"></span></span></label><input type="number" id="srbHours" min="0" value="64"></div>
+    <div class="stat"><span><span data-i="s_autoBoost"></span><span class="help fhelp">?<span class="tip" data-i="t_autoBoost"></span></span></span><span class="val" id="autoBoost">30×</span></div>
+    <div class="stat"><span><span data-i="s_badgeBoost"></span><span class="help fhelp">?<span class="tip" data-i="t_badgeBoost"></span></span></span><span class="val" id="badgeBoost">0 %</span></div>
+    <div class="stat"><span><span data-i="s_nextBadgeInfo"></span><span class="help fhelp">?<span class="tip" data-i="t_nextBadgeInfo"></span></span></span><span class="val" id="nextBadgeInfo">–</span></div>
+    <div class="stat"><span><span data-i="s_nextBadgeAB"></span><span class="help fhelp">?<span class="tip" data-i="t_nextBadgeAB"></span></span></span><span class="val" id="nextBadgeAB">–</span></div>
+  </div>
+
+  <!-- ============ ERGEBNISSE ============ -->
+  <div class="card" data-sec="earnings">
+    <h2><span data-i="h_earnings"></span><span class="help fhelp">?<span class="tip" data-i="t_earnings"></span></span></h2>
+    <table>
+      <thead><tr><th data-i="th_period"></th><th data-i="th_unboosted"></th><th data-i="th_boosted"></th></tr></thead>
+      <tbody id="earningsBody"></tbody>
+    </table>
+    <div class="hint" data-i="hint_earnings"></div>
+  </div>
+
+  <!-- ============ PORTFOLIO ============ -->
+  <div class="card" data-sec="portfolio">
+    <h2 data-i="h_portfolio"></h2>
+    <div class="stat"><span><span data-i="s_pv"></span><span class="help fhelp">?<span class="tip" data-i="t_pv"></span></span></span><span class="big" id="portfolioValue">$0.00</span></div>
+    <div class="stat"><span><span data-i="s_invested"></span><span class="help fhelp">?<span class="tip" data-i="t_invested"></span></span></span><span class="val" id="investedAB">0 AB</span></div>
+    <div class="stat"><span><span data-i="s_days"></span><span class="help fhelp">?<span class="tip" data-i="t_days"></span></span></span><span class="val" id="daysPlaying">–</span></div>
+    <div class="stat"><span><span data-i="s_avgAB"></span><span class="help fhelp">?<span class="tip" data-i="t_avgAB"></span></span></span><span class="val" id="avgABPerDay">–</span></div>
+    <div class="stat"><span><span data-i="s_goalDays"></span><span class="help fhelp">?<span class="tip" data-i="t_goalDays"></span></span></span><span class="val" id="daysToGoal">–</span></div>
+    <div class="stat"><span><span data-i="s_diamondDays"></span><span class="help fhelp">?<span class="tip" data-i="t_diamondDays"></span></span></span><span class="val" id="diamondDays">–</span></div>
+    <div class="stat"><span><span data-i="s_meanSec"></span><span class="help fhelp">?<span class="tip" data-i="t_meanSec"></span></span></span><span class="val" id="meanPerSec">–</span></div>
+    <div class="stat"><span><span data-i="s_avgPower"></span><span class="help fhelp">?<span class="tip" data-i="t_avgPower"></span></span></span><span class="val" id="avgPower">–</span></div>
+    <div class="stat"><span><span data-i="s_parcelValue"></span><span class="help fhelp">?<span class="tip" data-i="t_parcelValue"></span></span></span><span class="val" id="parcelValue">–</span></div>
+  </div>
+
+  <!-- ============ BREAKEVEN ============ -->
+  <div class="card wide" data-sec="breakeven">
+    <h2><span data-i="h_breakeven"></span><span class="help fhelp">?<span class="tip" data-i="t_breakeven"></span></span></h2>
+    <div id="beSummary"></div>
+    <table style="margin-top:10px">
+      <thead><tr><th data-i="th_beRange"></th><th>Boost</th><th data-i="th_beBreakeven"></th><th data-i="th_beDayMin"></th><th data-i="th_beDayMax"></th></tr></thead>
+      <tbody id="beBody"></tbody>
+    </table>
+    <div class="hint" data-i="hint_breakeven"></div>
+  </div>
+
+  <!-- ============ STÄDTE ============ -->
+  <div class="card wide" data-sec="cities">
+    <h2><span data-i="h_cities"></span><span class="help fhelp">?<span class="tip" data-i="t_cities"></span></span></h2>
+    <table>
+      <thead><tr><th data-i="th_city"></th><th>Parcels</th><th data-i="th_mayor"></th><th data-i="th_mayorAB"></th><th></th></tr></thead>
+      <tbody id="cityBody"></tbody>
+      <tfoot><tr style="font-weight:700">
+        <td id="cityTotalCell"></td>
+        <td id="cityParcels">0</td>
+        <td id="cityMayors">0×</td>
+        <td id="cityMayorAB">0 AB</td><td></td>
+      </tr></tfoot>
+    </table>
+    <div class="btnrow"><button class="secondary" onclick="addCity()" data-i="btn_addCity"></button></div>
+    <div class="hint" id="mayorStats"></div>
+    <div class="hint" id="cityHint"></div>
+  </div>
+
+  <!-- ============ MINISPIELE ============ -->
+  <div class="card wide" data-sec="minigames">
+    <h2><span data-i="h_minigames"></span><span class="help fhelp">?<span class="tip" data-i="t_minigames"></span></span></h2>
+    <div class="btnrow" style="margin-top:0;margin-bottom:10px;align-items:center">
+      <select id="mgGame">
+        <option>Warship</option><option>Bowling</option><option>Racer</option>
+        <option>Fishing</option><option>Golf</option>
+        <option>Vintage Fishing</option><option>Vintage Racer</option>
+      </select>
+      <input type="date" id="mgDate">
+      <input type="number" id="mgPlace" min="1" style="width:90px" data-ph="ph_place">
+      <input type="number" id="mgAB" min="0" placeholder="AB" style="width:90px">
+      <button onclick="addMinigame()" data-i="btn_addEntry"></button>
+    </div>
+    <table>
+      <thead><tr><th data-i="th_date"></th><th data-i="th_game"></th><th data-i="th_place"></th><th data-i="th_abGot"></th><th></th></tr></thead>
+      <tbody id="mgBody"></tbody>
+      <tfoot><tr style="font-weight:700">
+        <td id="mgTotalCell"></td><td></td>
+        <td id="mgAvgCell">–</td>
+        <td id="mgTotalAB">0 AB</td><td></td>
+      </tr></tfoot>
+    </table>
+    <div class="hint" id="mgStats"></div>
+    <div class="hint" id="mgSummary"></div>
+  </div>
+
+  <!-- ============ VERLAUF ============ -->
+  <div class="card wide" data-sec="history">
+    <h2><span data-i="h_snapshots"></span><span class="help">?<span class="tip" data-i="tip_storage"></span></span></h2>
+    <div class="btnrow">
+      <button onclick="saveSnapshot()" data-i="btn_snapshot"></button>
+      <button class="secondary" onclick="exportData()">⬇ Export (JSON)</button>
+      <button class="secondary" onclick="document.getElementById('importFile').click()">⬆ Import (JSON)</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+    </div>
+    <div class="legend" id="chartLegend"></div>
+    <div style="position:relative">
+      <canvas id="chart" width="900" height="220"></canvas>
+      <div id="chartTip"></div>
+    </div>
+    <div class="hint" id="chartSummary"></div>
+    <div class="hint" data-i="chart_scaleHint"></div>
+    <table style="margin-top:10px">
+      <thead><tr><th data-i="th_date"></th><th>Parcels</th><th>Badges</th><th>AB</th><th data-i="th_perDay"></th><th>Portfolio</th><th></th></tr></thead>
+      <tbody id="snapshotBody"></tbody>
+    </table>
+    <div class="hint" data-i="snap_hint"></div>
+  </div>
+
+</div>
+
+<footer style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:24px;padding:12px;border-top:1px solid var(--border)">
+  KI generated by Shizufuzu
+</footer>
+
+<script>
+"use strict";
+/* ====== Version & Changelog ====== */
+const VERSION = "0.1.0";
+const CHANGELOG = [
+  { v: "0.1.0", de: [
+      "Erste öffentliche Version",
+      "Parcel- & Einnahmen-Rechner mit Original-Raten (Common/Rare/Epic/Legendary)",
+      "Boost-Übersicht (Ad-Boost je Land, Badge-Boost, Super Rent Boost)",
+      "Breakeven-Anzeige inkl. Stufen-Tabelle und Durststrecken-Warnung",
+      "Städte & Bürgermeister mit datiertem AB-Verlauf (+1-Button) und Zeitraum-Statistik",
+      "Minispiel-Log mit Platzierung, AB und Zeitraum-Statistik",
+      "Verlauf mit Snapshots & Mehrlinien-Diagramm",
+      "Einstellungen: Themes, Akzentfarben, Schriftgröße, Bereiche sortier-/ausblendbar, eigene Spiele",
+      "Deutsch/Englisch, Hilfe-Modus, JSON-Export/Import, localStorage leeren"
+    ], en: [
+      "First public release",
+      "Parcel & earnings calculator with original rates (Common/Rare/Epic/Legendary)",
+      "Boost overview (ad boost per country, badge boost, Super Rent Boost)",
+      "Breakeven view incl. tier table and dry-stretch warning",
+      "Cities & mayor with dated AB history (+1 button) and period statistics",
+      "Mini-game log with placement, AB and period statistics",
+      "History with snapshots & multi-line chart",
+      "Settings: themes, accent colors, font size, sortable/hideable sections, custom games",
+      "German/English, help mode, JSON export/import, clear localStorage"
+    ] }
+];
+
+/* ====== Konstanten (1:1 aus atlasearthcalculator.com, atlasScripts.js) ====== */
+const RATES = { common: .00000000111, rare: .00000000159, epic: .00000000222, legendary: .00000000444 };
+const AVG_RATE = .5*RATES.common + .3*RATES.rare + .15*RATES.epic + .05*RATES.legendary;
+const PARCEL_COST_AB = 100, BADGE_COST_AB = 200;
+const DAYS_PER_YEAR = 365, DAYS_PER_MONTH = DAYS_PER_YEAR/12;
+
+// Ad-Boost-Stufen je Land: [maxParcels, Multiplikator]
+const BOOST_TIERS = {
+  USA: [[150,30],[220,20],[290,15],[365,12],[435,10],[545,8],[625,7],[730,6],[875,5],[1100,4],[1500,3],[Infinity,2]],
+  CAN: [[60,20],[100,15],[150,10],[180,8],[220,7],[250,6],[300,5],[350,4],[450,3],[Infinity,2]],
+  MEX: [[50,20],[85,15],[100,12],[140,8],[175,7],[225,5],[300,4],[400,3],[Infinity,2]],
+  FRA: [[70,20],[100,15],[135,10],[170,8],[200,7],[250,6],[300,5],[350,4],[400,3],[Infinity,2]],
+  JAP: [[50,20],[70,15],[105,12],[130,8],[150,7],[175,6],[200,5],[225,4],[300,3],[Infinity,2]],
+  BRA: [[60,20],[75,15],[100,12],[120,10],[150,8],[200,6],[250,5],[300,4],[400,3],[Infinity,2]],
+  SWD: [[30,15],[50,12],[70,8],[105,5],[130,4],[150,3],[Infinity,2]],
+  POL: [[30,8],[50,6],[70,4],[105,3],[Infinity,2]]
+};
+// Badge-Boost: Anzahl Badges -> Prozent
+function badgePercent(n){ return n<=0?0 : n<=10?.05 : n<=30?.10 : n<=60?.15 : n<=100?.20 : .25; }
+function badgesToNextTier(n){
+  const p = badgePercent(n);
+  return p===0?1 : p===.05?11-n : p===.10?31-n : p===.15?61-n : p===.20?101-n : 0;
+}
+function adBoost(parcels, country){
+  for(const [max,mult] of BOOST_TIERS[country]) if(parcels<=max) return mult;
+  return 2;
+}
+
+/* ====== Sprache (DE/EN) ====== */
+const I18N = {
+de: {
+  title_page: "Atlas Earth – Account Tracker (lokal)",
+  topSub: "Lokale Version – alle Daten bleiben in deinem Browser (localStorage). Raten &amp; Formeln entsprechen atlasearthcalculator.com (Stand Juni 2026). Inoffiziell, nicht mit Atlas Reality verbunden.",
+  btnHelpOn: "❓ Hilfe einblenden", btnHelpOff: "✖ Hilfe ausblenden", btnLang: "🇬🇧 English",
+  t_common: "Anzahl deiner <b>Common</b>-Parcels (graue, häufigste Sorte). Sie haben die niedrigste Grundmiete – alle anderen Seltenheiten werden daran gemessen.",
+  t_rare: "Anzahl deiner <b>Rare</b>-Parcels (blau). Bringen ca. 1,43× so viel Miete wie ein Common.",
+  t_epic: "Anzahl deiner <b>Epic</b>-Parcels (lila). Bringen 2× so viel Miete wie ein Common.",
+  t_legendary: "Anzahl deiner <b>Legendary</b>-Parcels (gold). Bringen 4× so viel Miete wie ein Common.",
+  l_landmarks: "Landmark-Parcels (nur Info)",
+  t_landmarks: "Parcels an Sehenswürdigkeiten (Landmarks). Wird nur als Info gespeichert – ihre Miete steckt bereits in der Seltenheit, unter der du sie oben mitzählst.",
+  l_country: "Land (Ad-Boost-Stufen)",
+  t_country: "Dein Spiel-Land bestimmt, ab wie vielen Parcels der <b>Ad-Boost-Multiplikator</b> sinkt. In Deutschland/Frankreich gilt z. B.: bis 70 Parcels 20×, bis 100 Parcels 15× usw.",
+  o_fra: "Deutschland/Frankreich", o_can: "Kanada", o_mex: "Mexiko", o_jap: "Japan", o_bra: "Brasilien", o_swd: "Schweden", o_pol: "Polen",
+  s_totalParcels: "Parcels gesamt",
+  t_totalParcels: "Summe aller Parcels. Wichtig: Davon hängt dein <b>Ad-Boost-Multiplikator</b> ab (mehr Parcels = niedrigerer Boost).",
+  s_rentShare: "Anteil Miete C/R/E/L (% Rent)",
+  t_rentShare: "Wie viel Prozent deiner Gesamtmiete aus jeder Seltenheit kommt (Reihenfolge: Common / Rare / Epic / Legendary). Entspricht der „% Rent“-Spalte des Online-Rechners.",
+  l_badges: "Badges gesamt",
+  t_badges: "Alle Badges deines Accounts. Badges geben einen dauerhaften <b>Mietbonus</b>: 1–10 Badges = 5 %, 11–30 = 10 %, 31–60 = 15 %, 61–100 = 20 %, ab 101 = 25 % (Maximum).",
+  l_freeBadges: "davon gratis erhalten",
+  t_freeBadges: "Badges, die du <b>geschenkt</b> bekommen hast (Events, Aktionen). Sie zählen beim Mietbonus mit, aber nicht zu deinen investierten Atlas Bucks im Portfolio-Wert.",
+  l_ab: "Atlas Bucks (aktuell)",
+  t_ab: "Dein aktueller <b>AB-Kontostand</b> im Spiel (noch nicht ausgegeben). Fließt in den Portfolio-Wert und die Ø-AB-pro-Tag-Rechnung ein.",
+  l_diamonds: "Diamanten",
+  t_diamonds: "Deine gesammelten <b>Diamanten</b>. Pro Tag kannst du damit 5 Glücksrad-Spins machen (7 mit Explorer's Club); ein Spin bringt im Schnitt 2 AB.",
+  l_inclDiamonds: "Diamanten in Portfolio einrechnen (Ø 2 AB/Spin)",
+  t_inclDiamonds: "Wenn aktiviert, werden deine Diamanten mit Ø 2 AB pro Spin als zusätzlicher Wert in den Portfolio-Wert eingerechnet.",
+  l_explorers: "Explorer's Club (7 statt 5 Spins/Tag)",
+  t_explorers: "Aktivieren, wenn du das <b>Explorer's-Club</b>-Abo hast – dann kannst du 7 statt 5 Glücksrad-Spins pro Tag machen (wirkt auf die Anzeige „Diamant-Spins übrig“).",
+  l_rentTotal: "Bisher verdiente Miete gesamt ($)",
+  t_rentTotal: "Die <b>gesamte Miete in $</b>, die dein Account bisher verdient hat (steht in der Spiel-Statistik). Wird zum Portfolio-Wert addiert.",
+  l_startDate: "Startdatum",
+  t_startDate: "Der Tag, an dem du mit Atlas Earth angefangen hast. Daraus berechnet der Tracker dein <b>Ø AB pro Tag</b> und Prognosen (z. B. Tage bis Ziel-AB).",
+  l_abPackage: "AB-Paket (Bewertungskurs)",
+  t_abPackage: "Der Kurs, mit dem Atlas Bucks in $ umgerechnet werden. Größere Pakete haben einen besseren Kurs – wähle das Paket, das du realistisch kaufen würdest.",
+  o_pkg0: "2.400 AB / $99,99", o_pkg1: "2.550 AB / $99,99", o_pkg2: "26.000 AB / $999,99",
+  o_pkg3: "54.000 AB / $1.999", o_pkg4: "140.000 AB / $4.999,99", o_pkg5: "290.000 AB / $9.999,99",
+  l_goalAB: "Ziel-AB (optional)",
+  t_goalAB: "Ein <b>AB-Sparziel</b>, z. B. für die nächste Badge-Stufe. Der Tracker rechnet aus, in wie vielen Tagen du es bei deinem bisherigen Ø-Tempo erreichst.",
+  l_boostHours: "Boost-Stunden pro Tag (0–24)",
+  t_boostHours: "Wie viele Stunden am Tag dein <b>Ad-Boost</b> aktiv ist (durch Werbung schauen, hält je 20 Min). 24 = rund um die Uhr geboostet, der Rest des Tages zählt unboosted.",
+  l_overrideBoost: "Ad-Boost manuell überschreiben",
+  t_overrideBoost: "Normalerweise wird der Multiplikator automatisch aus Parcel-Anzahl + Land bestimmt. Hier kannst du einen <b>festen Wert</b> vorgeben, z. B. zum Vergleichen.",
+  l_srbValue: "Super-Rent-Boost-Multiplikator",
+  t_srbValue: "<b>Super Rent Boost</b> (SRB): zeitlich begrenzte Events, bei denen die Miete z. B. 50× zählt statt des normalen Ad-Boosts.",
+  l_srbHours: "SRB-Stunden pro Monat",
+  t_srbHours: "Wie viele Stunden <b>SRB-Events</b> du pro Monat mitnimmst (Standard 64). Fließt in die Monats- und Jahres-Einnahmen ein.",
+  s_autoBoost: "Ad-Boost (automatisch n. Parcel-Anzahl)",
+  t_autoBoost: "Der Multiplikator, den du beim Werbung schauen bekommst. Er <b>sinkt</b>, je mehr Parcels du hast – die Stufen hängen vom gewählten Land ab.",
+  s_badgeBoost: "Badge-Boost",
+  t_badgeBoost: "Dein dauerhafter Mietbonus aus Badges (5–25 %). Gilt rund um die Uhr, auch ohne Werbung.",
+  s_nextBadgeInfo: "Badges bis nächste Boost-Stufe",
+  t_nextBadgeInfo: "So viele Badges fehlen dir noch bis zur nächsten Bonus-Stufe (z. B. von 5 % auf 10 %).",
+  s_nextBadgeAB: "AB-Kosten bis nächste Badge-Stufe",
+  t_nextBadgeAB: "Was die fehlenden Badges kosten würden: <b>200 AB pro Badge</b>.",
+  h_earnings: "💰 Einnahmen",
+  t_earnings: "Deine berechneten Mieteinnahmen. <b>„ohne Boost“</b> = Grundmiete inkl. Badge-Bonus. <b>„mit Boost“</b> = deine Boost-Stunden/Tag mit Ad-Boost-Multiplikator, Rest des Tages unboosted; Monat/Jahr enthalten zusätzlich die SRB-Stunden.",
+  th_period: "Zeitraum", th_unboosted: "ohne Boost", th_boosted: "mit Boost",
+  hint_earnings: "„mit Boost“ = Boost-Stunden/Tag mit Ad-Boost-Multiplikator, Rest des Tages unboosted. Monat (365/12 Tage) und Jahr enthalten die SRB-Stunden.",
+  r_sec: "Sekunde", r_hour: "Stunde", r_day: "Tag", r_week: "Woche",
+  r_month: "Monat (Ø {0} T.)", r_year: "Jahr (365 T.)",
+  h_portfolio: "📊 Portfolio &amp; Fortschritt",
+  s_pv: "Portfolio-Wert (AB-Gegenwert + Miete)",
+  t_pv: "Geschätzter $-Wert deines Accounts: investierte + aktuelle Atlas Bucks, umgerechnet zum gewählten AB-Paketkurs, plus bisher verdiente Miete. Die ersten 200 AB (Gratis-Parcels) zählen nicht mit.",
+  s_invested: "Investierte Atlas Bucks (Parcels + Badges)",
+  t_invested: "Was deine Parcels (100 AB/Stück) und gekauften Badges (200 AB/Stück) zusammen gekostet haben. Gratis-Badges zählen nicht mit.",
+  s_days: "Tage dabei", t_days: "Tage seit deinem Startdatum.",
+  s_avgAB: "Ø AB pro Tag",
+  t_avgAB: "Deine investierten + aktuellen Atlas Bucks geteilt durch die Tage seit Start – dein bisheriges Sammel-Tempo.",
+  s_goalDays: "Tage bis Ziel-AB",
+  t_goalDays: "Prognose, wann du dein Ziel-AB erreichst – basierend auf deinem Ø AB pro Tag.",
+  s_diamondDays: "Diamant-Spins übrig (Tage)",
+  t_diamondDays: "Wie viele Tage du mit deinen Diamanten noch täglich alle Glücksrad-Spins machen kannst (5/Tag, mit Explorer's Club 7/Tag).",
+  s_meanSec: "Ø Miete pro Parcel/Sek (Mean/Sec)",
+  t_meanSec: "Durchschnittliche Miete pro Sekunde <b>pro einzelnem Parcel</b> (inkl. Badge-Boost). Entspricht „Mean/Sec“ im Online-Rechner.",
+  s_avgPower: "Ø Wert pro Parcel (×Common)",
+  t_avgPower: "Wie viel ein durchschnittliches Parcel von dir wert ist, gemessen in Common-Einheiten (1,00 = nur Commons; je höher, desto besser deine Seltenheiten).",
+  s_parcelValue: "Gesamtwert in Common-Einheiten (Parcel Value)",
+  t_parcelValue: "Deine gesamte Mietleistung ausgedrückt in „Anzahl Commons“ (inkl. Badge-Boost). Entspricht „Parcel Value“ im Online-Rechner.",
+  h_cities: "🏙️ Städte &amp; Bürgermeister",
+  t_cities: "Deine persönliche Übersicht: In welchen Städten besitzt du wie viele Parcels? Hake <b>Bürgermeister</b> an, wenn du in einer Stadt die meisten Parcels hast, und trage ein, was du dort als Bürgermeister an AB verdient hast.",
+  th_city: "Stadt", th_mayor: "Bürgermeister", th_mayorAB: "AB-Verdienst als Bürgermeister",
+  btn_addCity: "+ Stadt hinzufügen",
+  cityTotal: "Gesamt: {0} Städte",
+  city_empty: "Noch keine Städte – mit „+ Stadt hinzufügen“ starten.",
+  city_hint: "Hinweis: {0} von {1} Parcels einer Stadt zugeordnet.",
+  ph_cityName: "Stadtname",
+  confirm_delCity: "Stadt „{0}“ löschen?",
+  h_minigames: "🎮 Minispiele",
+  t_minigames: "Dein Minispiel-Logbuch: Spiel auswählen, Datum, Platzierung und erhaltene AB eintragen, dann <b>„+ Eintrag“</b>. Unten siehst du Gesamtzahl, Ø-Platzierung, AB-Summe und eine Statistik pro Spiel.",
+  ph_place: "Platz", btn_addEntry: "+ Eintrag",
+  th_date: "Datum", th_game: "Minispiel", th_place: "Platzierung", th_abGot: "Erhaltene AB",
+  mgTotal: "Gesamt: {0} Einträge", mgAvg: "Ø Platz {0}",
+  mg_empty: "Noch keine Einträge – Spiel, Datum, Platzierung und AB oben eintragen.",
+  alert_date: "Bitte ein Datum angeben.",
+  alert_place: "Bitte eine Platzierung angeben (1 = Erster).",
+  mg_summary: "{0}: {1}× gespielt, Bester Platz {2}., {3} AB",
+  h_snapshots: "📈 Verlauf (Snapshots)",
+  tip_storage: "<b>Wo werden meine Daten gespeichert?</b><br>Alle Eingaben und Snapshots liegen im <b>lokalen Speicher deines Browsers</b> (localStorage) – nicht in der HTML-Datei und nicht im Internet. Niemand außer dir hat Zugriff.<br><br><b>Das heißt:</b><br>• Daten bleiben beim Schließen und Neustarten erhalten.<br>• Sie sind nur in <b>diesem Browser auf diesem PC</b> sichtbar.<br>• Beim Löschen von „Cookies &amp; Websitedaten“ im Browser gehen sie <b>verloren</b>!<br><br><b>Tipp:</b> Regelmäßig „⬇ Export (JSON)“ klicken – das erstellt eine Backup-Datei, die du jederzeit per „⬆ Import“ wiederherstellen kannst (auch auf einem anderen PC).",
+  btn_snapshot: "📸 Snapshot speichern",
+  th_perDay: "$/Tag (Boost)",
+  snap_hint: "Snapshots werden lokal gespeichert. Regelmäßig exportieren, falls der Browser-Speicher gelöscht wird!",
+  snap_empty: "Noch keine Snapshots – Stats eingeben und „Snapshot speichern“ klicken.",
+  confirm_delSnap: "Diesen Snapshot löschen?",
+  chart_need2: "Mindestens 2 Snapshots nötig für den Verlauf",
+  chart_title: "Portfolio-Wert über Zeit",
+  del: "Löschen",
+  badge_max: "Max (25 %) erreicht",
+  badge_to: "{0} Badge(s) bis {1} %",
+  goal_reached: "erreicht ✔",
+  goal_days: "{0} Tage ({1})",
+  unit_days: " Tage",
+  import_ok: "Import erfolgreich ({0} Snapshots, {1} Städte, {2} Minispiel-Einträge).",
+  import_fail: "Import fehlgeschlagen: ",
+  series_portfolio: "Portfolio-Wert",
+  series_parcels: "Parcels",
+  series_perDay: "$/Tag (Boost)",
+  series_badges: "Badges",
+  series_ab: "Atlas Bucks",
+  chart_legendTitle: "Linien:",
+  chart_noSeries: "Keine Linie ausgewählt – oben mindestens eine Kennzahl anhaken.",
+  chart_scaleHint: "Hinweis: Bei mehreren Linien wird jede Linie auf ihren eigenen Wertebereich skaliert (unterer Rand = ihr Minimum, oberer Rand = ihr Maximum). Die Achsenwerte links gelten nur, wenn genau eine Linie aktiv ist – fahre mit der Maus über das Diagramm, um exakte Werte zu sehen.",
+  chart_devel: "Entwicklung (erster → letzter Snapshot): ",
+  h_breakeven: "📉 Boost-Stufen &amp; Breakeven",
+  t_breakeven: "Der <b>Ad-Boost-Multiplikator</b> sinkt, sobald deine Parcel-Anzahl bestimmte Grenzen überschreitet. <b>Breakeven</b> = die Parcel-Anzahl in der nächsten Stufe, ab der du trotz niedrigerem Boost wieder mehr pro Tag verdienst als heute. Zwischen Grenze und Breakeven liegt eine „Durststrecke“, in der zusätzliche Parcels dein Tages-Einkommen vorübergehend senken.",
+  th_beRange: "Parcels (von–bis)",
+  th_beBreakeven: "Breakeven ab",
+  th_beDayMin: "$/Tag an Untergrenze",
+  th_beDayMax: "$/Tag an Obergrenze",
+  hint_breakeven: "Alle $-Werte sind Tages-Einnahmen mit deinen aktuellen Einstellungen (Boost-Stunden, Badge-Boost) und deinem Ø-Parcel-Wert. „Breakeven ab“ = so viele Parcels brauchst du in dieser Stufe, um das Tages-Einkommen vom Ende der vorherigen Stufe wieder zu erreichen; „—“ = innerhalb dieser Stufe nicht erreichbar (Breakeven liegt erst in einer späteren Stufe). Die Tabelle nutzt immer die automatischen Boost-Stufen des gewählten Landes.",
+  be_current: "Aktuelle Stufe: <b>{0}–{1} Parcels → {2}× Ad-Boost</b>",
+  be_currentLast: "Aktuelle Stufe: <b>ab {0} Parcels → {1}× Ad-Boost</b> (niedrigste Stufe)",
+  be_youAreHere: "du bist hier ({0})",
+  be_perDayNow: "Dein aktuelles Tages-Einkommen (mit Boost): <b>{0}</b>",
+  be_toBoundary: "Noch <b>{0} Parcels</b> bis zur Stufengrenze bei {1}.",
+  be_drop: "Beim Überschreiten der Grenze sinkt dein Ad-Boost von {0}× auf <b>{1}×</b>.",
+  be_breakevenAt: "<b>Breakeven bei {0} Parcels:</b> ab dort verdienst du trotz niedrigerem Boost wieder mehr pro Tag als heute (dann {1}/Tag).",
+  be_deadzone: "⚠️ Durststrecke: Zwischen <b>{0} und {1} Parcels</b> liegt dein Tages-Einkommen unter dem heutigen Wert von {2}/Tag.",
+  be_lastTier: "Du bist in der niedrigsten Boost-Stufe – es gibt keine weitere Grenze. Jedes zusätzliche Parcel erhöht dein Einkommen.",
+  be_noParcels: "Trage oben deine Parcels ein, um deine Boost-Stufe und den Breakeven zu sehen.",
+  be_noBoostHours: "Du hast 0 Boost-Stunden eingestellt – ohne Ad-Boost gibt es keinen Breakeven-Effekt: Mehr Parcels sind immer besser.",
+  be_overrideNote: "Hinweis: Dein manueller Ad-Boost-Override wird hier ignoriert – Tabelle und Breakeven nutzen die automatischen Stufen.",
+  be_assume: "Annahme: Neue Parcels entsprechen deinem aktuellen Ø-Parcel-Wert ({0}× Common).",
+  btnSettings: "⚙️ Einstellungen",
+  h_settings: "⚙️ Einstellungen",
+  t_settings: "Hier passt du den Tracker an dich an: Name, Farbschema, Akzentfarben, Schriftgröße, sichtbare Bereiche samt Reihenfolge und eigene Minispiele. Alles wird lokal gespeichert und ist im JSON-Export enthalten.",
+  set_name: "Spielername (oben angezeigt)",
+  set_theme: "Farbschema",
+  theme_ocean: "Ozean (Standard)", theme_forest: "Wald", theme_violet: "Violett",
+  theme_amoled: "Schwarz (AMOLED)", theme_light: "Hell",
+  set_accent: "Akzentfarbe 1 (Werte/Buttons)",
+  set_accent2: "Akzentfarbe 2 (Überschriften)",
+  set_font: "Schriftgröße",
+  font_s: "Klein", font_m: "Normal", font_l: "Groß",
+  set_sections: "Bereiche &amp; Reihenfolge",
+  set_sectionsHint: "Häkchen = Bereich sichtbar. Mit ▲/▼ änderst du die Reihenfolge der Bereiche auf der Seite. Ausgeblendete Bereiche rechnen im Hintergrund normal weiter.",
+  sec_parcels: "🏠 Parcels", sec_account: "👤 Account", sec_boost: "🚀 Boost",
+  set_games: "Eigene Minispiele",
+  set_gamesPh: "Name des Minispiels",
+  set_gamesAdd: "+ Hinzufügen",
+  set_noGames: "Noch keine eigenen Spiele.",
+  set_gamesHint: "Eigene Spiele erscheinen zusätzlich in der Auswahlliste der Minispiel-Sektion. Beim Entfernen bleiben vorhandene Log-Einträge erhalten.",
+  set_reset: "↩ Einstellungen zurücksetzen",
+  confirm_reset: "Alle Darstellungs-Einstellungen zurücksetzen? Deine Daten (Eingaben, Snapshots, Städte, Minispiele) bleiben erhalten.",
+  city_plus1_title: "+20 AB mit heutigem Datum verbuchen (1× Bürgermeister-Belohnung)",
+  city_logBtn_title: "Datierten Verlauf der Bürgermeister-AB anzeigen/verbergen",
+  city_logTitle: "Bürgermeister-AB-Verlauf: {0}",
+  city_logEmpty: "Noch keine datierten Einträge. Mit „+1“ verbuchst du 20 AB mit heutigem Datum – oder trage hier Datum und Betrag manuell ein.",
+  city_logSum: "Verbucht gesamt: {0} AB ({1} Einträge)",
+  mayor_stats: "Bürgermeister-AB laut Verlauf (alle Städte) – letzte 30 Tage: <b>{0} AB</b> • letzte 90 Tage: <b>{1} AB</b> • letztes Jahr: <b>{2} AB</b> • Gesamt: <b>{3} AB</b>",
+  mg_stats: "Minispiel-AB – letzte 30 Tage: <b>{0} AB</b> • letzte 90 Tage: <b>{1} AB</b> • letztes Jahr: <b>{2} AB</b> • Gesamt: <b>{3} AB</b>",
+  set_clear: "🗑 Alle Daten löschen (localStorage leeren)",
+  confirm_clear1: "Wirklich ALLE Tracker-Daten löschen?\n\nDas umfasst: Eingaben, Snapshots, Städte (inkl. Bürgermeister-Verlauf), Minispiel-Log und Einstellungen.\n\nTipp: Vorher mit „⬇ Export (JSON)“ ein Backup erstellen!",
+  confirm_clear2: "Letzte Sicherheitsfrage: Daten jetzt unwiderruflich löschen?",
+  changelog_title: "Versionsverlauf"
+},
+en: {
+  title_page: "Atlas Earth – Account Tracker (local)",
+  topSub: "Local version – all data stays in your browser (localStorage). Rates &amp; formulas match atlasearthcalculator.com (as of June 2026). Unofficial, not affiliated with Atlas Reality.",
+  btnHelpOn: "❓ Show help", btnHelpOff: "✖ Hide help", btnLang: "🇩🇪 Deutsch",
+  t_common: "Number of your <b>Common</b> parcels (gray, most frequent type). They have the lowest base rent – all other rarities are measured against them.",
+  t_rare: "Number of your <b>Rare</b> parcels (blue). Earn about 1.43× the rent of a Common.",
+  t_epic: "Number of your <b>Epic</b> parcels (purple). Earn 2× the rent of a Common.",
+  t_legendary: "Number of your <b>Legendary</b> parcels (gold). Earn 4× the rent of a Common.",
+  l_landmarks: "Landmark parcels (info only)",
+  t_landmarks: "Parcels on landmarks. Stored as info only – their rent is already included in the rarity you count them under above.",
+  l_country: "Country (ad-boost tiers)",
+  t_country: "Your game country determines at how many parcels the <b>ad-boost multiplier</b> drops. In Germany/France for example: up to 70 parcels 20×, up to 100 parcels 15×, etc.",
+  o_fra: "Germany/France", o_can: "Canada", o_mex: "Mexico", o_jap: "Japan", o_bra: "Brazil", o_swd: "Sweden", o_pol: "Poland",
+  s_totalParcels: "Total parcels",
+  t_totalParcels: "Sum of all parcels. Important: your <b>ad-boost multiplier</b> depends on it (more parcels = lower boost).",
+  s_rentShare: "Rent share C/R/E/L (% rent)",
+  t_rentShare: "What percentage of your total rent comes from each rarity (order: Common / Rare / Epic / Legendary). Matches the “% Rent” column of the online calculator.",
+  l_badges: "Total badges",
+  t_badges: "All badges on your account. Badges give a permanent <b>rent bonus</b>: 1–10 badges = 5 %, 11–30 = 10 %, 31–60 = 15 %, 61–100 = 20 %, 101+ = 25 % (maximum).",
+  l_freeBadges: "of which received free",
+  t_freeBadges: "Badges you received as a <b>gift</b> (events, promotions). They count toward the rent bonus, but not toward your invested Atlas Bucks in the portfolio value.",
+  l_ab: "Atlas Bucks (current)",
+  t_ab: "Your current <b>AB balance</b> in the game (not yet spent). Included in the portfolio value and the avg. AB/day calculation.",
+  l_diamonds: "Diamonds",
+  t_diamonds: "Your collected <b>diamonds</b>. You can use them for 5 lucky-wheel spins per day (7 with Explorer's Club); a spin yields 2 AB on average.",
+  l_inclDiamonds: "Include diamonds in portfolio (avg. 2 AB/spin)",
+  t_inclDiamonds: "If enabled, your diamonds are counted toward the portfolio value at an average of 2 AB per spin.",
+  l_explorers: "Explorer's Club (7 instead of 5 spins/day)",
+  t_explorers: "Enable if you have the <b>Explorer's Club</b> subscription – you can then do 7 instead of 5 lucky-wheel spins per day (affects “diamond spins left”).",
+  l_rentTotal: "Total rent earned so far ($)",
+  t_rentTotal: "The <b>total rent in $</b> your account has earned so far (see in-game statistics). Added to the portfolio value.",
+  l_startDate: "Start date",
+  t_startDate: "The day you started playing Atlas Earth. The tracker uses it to calculate your <b>avg. AB per day</b> and forecasts (e.g. days to goal AB).",
+  l_abPackage: "AB package (valuation rate)",
+  t_abPackage: "The rate used to convert Atlas Bucks to $. Bigger packages have a better rate – pick the package you would realistically buy.",
+  o_pkg0: "2,400 AB / $99.99", o_pkg1: "2,550 AB / $99.99", o_pkg2: "26,000 AB / $999.99",
+  o_pkg3: "54,000 AB / $1,999", o_pkg4: "140,000 AB / $4,999.99", o_pkg5: "290,000 AB / $9,999.99",
+  l_goalAB: "Goal AB (optional)",
+  t_goalAB: "An <b>AB savings goal</b>, e.g. for the next badge tier. The tracker calculates how many days it will take at your current pace.",
+  l_boostHours: "Boost hours per day (0–24)",
+  t_boostHours: "How many hours per day your <b>ad boost</b> is active (by watching ads, 20 min each). 24 = boosted around the clock; the rest of the day counts unboosted.",
+  l_overrideBoost: "Override ad boost manually",
+  t_overrideBoost: "Normally the multiplier is determined automatically from parcel count + country. Here you can set a <b>fixed value</b>, e.g. for comparisons.",
+  l_srbValue: "Super-rent-boost multiplier",
+  t_srbValue: "<b>Super Rent Boost</b> (SRB): limited-time events where rent counts e.g. 50× instead of the normal ad boost.",
+  l_srbHours: "SRB hours per month",
+  t_srbHours: "How many hours of <b>SRB events</b> you catch per month (default 64). Included in the monthly and yearly earnings.",
+  s_autoBoost: "Ad boost (automatic by parcel count)",
+  t_autoBoost: "The multiplier you get for watching ads. It <b>decreases</b> the more parcels you own – the tiers depend on the selected country.",
+  s_badgeBoost: "Badge boost",
+  t_badgeBoost: "Your permanent rent bonus from badges (5–25 %). Applies around the clock, even without ads.",
+  s_nextBadgeInfo: "Badges until next boost tier",
+  t_nextBadgeInfo: "How many badges you still need for the next bonus tier (e.g. from 5 % to 10 %).",
+  s_nextBadgeAB: "AB cost until next badge tier",
+  t_nextBadgeAB: "What the missing badges would cost: <b>200 AB per badge</b>.",
+  h_earnings: "💰 Earnings",
+  t_earnings: "Your calculated rent earnings. <b>“without boost”</b> = base rent incl. badge bonus. <b>“with boost”</b> = your boost hours/day with the ad-boost multiplier, rest of the day unboosted; month/year additionally include the SRB hours.",
+  th_period: "Period", th_unboosted: "without boost", th_boosted: "with boost",
+  hint_earnings: "“with boost” = boost hours/day with ad-boost multiplier, rest of the day unboosted. Month (365/12 days) and year include the SRB hours.",
+  r_sec: "Second", r_hour: "Hour", r_day: "Day", r_week: "Week",
+  r_month: "Month (avg. {0} d)", r_year: "Year (365 d)",
+  h_portfolio: "📊 Portfolio &amp; Progress",
+  s_pv: "Portfolio value (AB equivalent + rent)",
+  t_pv: "Estimated $ value of your account: invested + current Atlas Bucks, converted at the selected AB package rate, plus rent earned so far. The first 200 AB (free parcels) don't count.",
+  s_invested: "Invested Atlas Bucks (parcels + badges)",
+  t_invested: "What your parcels (100 AB each) and purchased badges (200 AB each) cost in total. Free badges don't count.",
+  s_days: "Days playing", t_days: "Days since your start date.",
+  s_avgAB: "Avg. AB per day",
+  t_avgAB: "Your invested + current Atlas Bucks divided by the days since start – your collection pace so far.",
+  s_goalDays: "Days to goal AB",
+  t_goalDays: "Forecast of when you will reach your goal AB – based on your avg. AB per day.",
+  s_diamondDays: "Diamond spins left (days)",
+  t_diamondDays: "For how many days you can still do all daily lucky-wheel spins with your diamonds (5/day, 7/day with Explorer's Club).",
+  s_meanSec: "Avg. rent per parcel/sec (mean/sec)",
+  t_meanSec: "Average rent per second <b>per individual parcel</b> (incl. badge boost). Matches “Mean/Sec” in the online calculator.",
+  s_avgPower: "Avg. value per parcel (×Common)",
+  t_avgPower: "How much an average parcel of yours is worth, measured in Common units (1.00 = only Commons; the higher, the better your rarities).",
+  s_parcelValue: "Total value in Common units (parcel value)",
+  t_parcelValue: "Your total rent power expressed as a “number of Commons” (incl. badge boost). Matches “Parcel Value” in the online calculator.",
+  h_cities: "🏙️ Cities &amp; Mayor",
+  t_cities: "Your personal overview: in which cities do you own how many parcels? Check <b>Mayor</b> if you own the most parcels in a city, and enter the AB you earned there as mayor.",
+  th_city: "City", th_mayor: "Mayor", th_mayorAB: "AB earned as mayor",
+  btn_addCity: "+ Add city",
+  cityTotal: "Total: {0} cities",
+  city_empty: "No cities yet – start with “+ Add city”.",
+  city_hint: "Note: {0} of {1} parcels assigned to a city.",
+  ph_cityName: "City name",
+  confirm_delCity: "Delete city “{0}”?",
+  h_minigames: "🎮 Mini games",
+  t_minigames: "Your mini-game log: pick the game, enter date, placement and AB received, then <b>“+ Add entry”</b>. Below you see the total count, avg. placement, AB sum and per-game statistics.",
+  ph_place: "Rank", btn_addEntry: "+ Add entry",
+  th_date: "Date", th_game: "Mini game", th_place: "Placement", th_abGot: "AB received",
+  mgTotal: "Total: {0} entries", mgAvg: "Avg. rank {0}",
+  mg_empty: "No entries yet – enter game, date, placement and AB above.",
+  alert_date: "Please enter a date.",
+  alert_place: "Please enter a placement (1 = first).",
+  mg_summary: "{0}: played {1}×, best rank {2}, {3} AB",
+  h_snapshots: "📈 History (snapshots)",
+  tip_storage: "<b>Where is my data stored?</b><br>All inputs and snapshots live in your <b>browser's local storage</b> (localStorage) – not in the HTML file and not on the internet. Nobody but you has access.<br><br><b>That means:</b><br>• Data survives closing and restarting.<br>• It is only visible in <b>this browser on this PC</b>.<br>• Clearing “cookies &amp; site data” in the browser <b>deletes</b> it!<br><br><b>Tip:</b> Click “⬇ Export (JSON)” regularly – it creates a backup file you can restore any time via “⬆ Import” (even on another PC).",
+  btn_snapshot: "📸 Save snapshot",
+  th_perDay: "$/day (boost)",
+  snap_hint: "Snapshots are stored locally. Export regularly in case the browser storage gets cleared!",
+  snap_empty: "No snapshots yet – enter your stats and click “Save snapshot”.",
+  confirm_delSnap: "Delete this snapshot?",
+  chart_need2: "At least 2 snapshots needed for the history",
+  chart_title: "Portfolio value over time",
+  del: "Delete",
+  badge_max: "Max (25 %) reached",
+  badge_to: "{0} badge(s) to {1} %",
+  goal_reached: "reached ✔",
+  goal_days: "{0} days ({1})",
+  unit_days: " days",
+  import_ok: "Import successful ({0} snapshots, {1} cities, {2} mini-game entries).",
+  import_fail: "Import failed: ",
+  series_portfolio: "Portfolio value",
+  series_parcels: "Parcels",
+  series_perDay: "$/day (boost)",
+  series_badges: "Badges",
+  series_ab: "Atlas Bucks",
+  chart_legendTitle: "Lines:",
+  chart_noSeries: "No line selected – tick at least one metric above.",
+  chart_scaleHint: "Note: with several lines, each line is scaled to its own value range (bottom = its minimum, top = its maximum). The axis values on the left only apply when exactly one line is active – hover over the chart to see exact values.",
+  chart_devel: "Development (first → last snapshot): ",
+  h_breakeven: "📉 Boost tiers &amp; breakeven",
+  t_breakeven: "The <b>ad-boost multiplier</b> drops once your parcel count crosses certain boundaries. <b>Breakeven</b> = the parcel count in the next tier at which you earn more per day again despite the lower boost. Between the boundary and the breakeven lies a “dry stretch” where additional parcels temporarily lower your daily earnings.",
+  th_beRange: "Parcels (from–to)",
+  th_beBreakeven: "Breakeven at",
+  th_beDayMin: "$/day at lower bound",
+  th_beDayMax: "$/day at upper bound",
+  hint_breakeven: "All $ values are daily earnings with your current settings (boost hours, badge boost) and your avg. parcel value. “Breakeven at” = how many parcels you need in that tier to reach the daily earnings from the end of the previous tier again; “—” = not reachable within this tier (the breakeven only comes in a later tier). The table always uses the automatic boost tiers of the selected country.",
+  be_current: "Current tier: <b>{0}–{1} parcels → {2}× ad boost</b>",
+  be_currentLast: "Current tier: <b>{0}+ parcels → {1}× ad boost</b> (lowest tier)",
+  be_youAreHere: "you are here ({0})",
+  be_perDayNow: "Your current daily earnings (boosted): <b>{0}</b>",
+  be_toBoundary: "<b>{0} parcels</b> left until the tier boundary at {1}.",
+  be_drop: "Crossing the boundary lowers your ad boost from {0}× to <b>{1}×</b>.",
+  be_breakevenAt: "<b>Breakeven at {0} parcels:</b> from there you earn more per day again despite the lower boost (then {1}/day).",
+  be_deadzone: "⚠️ Dry stretch: between <b>{0} and {1} parcels</b> your daily earnings stay below today's {2}/day.",
+  be_lastTier: "You are in the lowest boost tier – there is no further boundary. Every additional parcel increases your earnings.",
+  be_noParcels: "Enter your parcels above to see your boost tier and breakeven.",
+  be_noBoostHours: "You set 0 boost hours – without ad boost there is no breakeven effect: more parcels are always better.",
+  be_overrideNote: "Note: your manual ad-boost override is ignored here – table and breakeven use the automatic tiers.",
+  be_assume: "Assumption: new parcels match your current avg. parcel value ({0}× Common).",
+  btnSettings: "⚙️ Settings",
+  h_settings: "⚙️ Settings",
+  t_settings: "Customize the tracker here: name, color theme, accent colors, font size, visible sections including their order, and custom mini games. Everything is stored locally and included in the JSON export.",
+  set_name: "Player name (shown at top)",
+  set_theme: "Color theme",
+  theme_ocean: "Ocean (default)", theme_forest: "Forest", theme_violet: "Violet",
+  theme_amoled: "Black (AMOLED)", theme_light: "Light",
+  set_accent: "Accent color 1 (values/buttons)",
+  set_accent2: "Accent color 2 (headings)",
+  set_font: "Font size",
+  font_s: "Small", font_m: "Normal", font_l: "Large",
+  set_sections: "Sections &amp; order",
+  set_sectionsHint: "Checkbox = section visible. Use ▲/▼ to change the order of the sections on the page. Hidden sections keep calculating in the background.",
+  sec_parcels: "🏠 Parcels", sec_account: "👤 Account", sec_boost: "🚀 Boost",
+  set_games: "Custom mini games",
+  set_gamesPh: "Mini game name",
+  set_gamesAdd: "+ Add",
+  set_noGames: "No custom games yet.",
+  set_gamesHint: "Custom games additionally appear in the dropdown of the mini-game section. Removing a game keeps existing log entries.",
+  set_reset: "↩ Reset settings",
+  confirm_reset: "Reset all appearance settings? Your data (inputs, snapshots, cities, mini games) is kept.",
+  city_plus1_title: "Log +20 AB with today's date (1× mayor reward)",
+  city_logBtn_title: "Show/hide the dated history of mayor AB",
+  city_logTitle: "Mayor AB history: {0}",
+  city_logEmpty: "No dated entries yet. Use “+1” to log 20 AB with today's date – or enter date and amount manually here.",
+  city_logSum: "Logged total: {0} AB ({1} entries)",
+  mayor_stats: "Mayor AB per history (all cities) – last 30 days: <b>{0} AB</b> • last 90 days: <b>{1} AB</b> • last year: <b>{2} AB</b> • total: <b>{3} AB</b>",
+  mg_stats: "Mini-game AB – last 30 days: <b>{0} AB</b> • last 90 days: <b>{1} AB</b> • last year: <b>{2} AB</b> • total: <b>{3} AB</b>",
+  set_clear: "🗑 Delete all data (clear localStorage)",
+  confirm_clear1: "Really delete ALL tracker data?\n\nThis includes: inputs, snapshots, cities (incl. mayor history), mini-game log and settings.\n\nTip: create a backup first with “⬇ Export (JSON)”!",
+  confirm_clear2: "Final confirmation: delete the data irreversibly now?",
+  changelog_title: "Version history"
+}};
+
+const LS_PREFIX = "aet_";
+let lang = localStorage.getItem(LS_PREFIX+"lang") || "de";
+function LOC(){ return lang==="de" ? "de-DE" : "en-US"; }
+function T(key, ...args){
+  let s = (I18N[lang] && I18N[lang][key]) ?? I18N.de[key] ?? key;
+  args.forEach((a,i)=>{ s = s.split("{"+i+"}").join(a); });
+  return s;
+}
+function toggleLang(){
+  lang = lang==="de" ? "en" : "de";
+  localStorage.setItem(LS_PREFIX+"lang", lang);
+  applyLang();
+}
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.title = T("title_page");
+  document.querySelectorAll("[data-i]").forEach(el=>{ el.innerHTML = T(el.dataset.i); });
+  document.querySelectorAll("[data-ph]").forEach(el=>{ el.placeholder = T(el.dataset.ph); });
+  document.getElementById("langToggle").textContent = T("btnLang");
+  document.getElementById("helpToggle").textContent =
+    document.body.classList.contains("show-help") ? T("btnHelpOff") : T("btnHelpOn");
+  renderChartLegend();
+  renderSettingsPanel();
+  renderChangelog();
+  calc(); renderSnapshots(); renderCities(); renderMinigames();
+}
+
+/* ====== Eingabe-Handling + localStorage ====== */
+const FIELDS = ["common","rare","epic","legendary","landmarks","country","badges","freeBadges",
+  "atlasBucks","diamonds","rentTotal","startDate","abPackage","goalAB",
+  "boostHours","overrideBoostValue","srbValue","srbHours"];
+const CHECKS = ["includeDiamonds","explorersClub","overrideBoost"];
+
+function num(id){ const v = parseFloat(document.getElementById(id).value); return isNaN(v)||v<0?0:v; }
+function fmt$(v, digits){
+  if(digits===undefined) digits = Math.abs(v)>=0.01?2 : 10;
+  return "$" + v.toLocaleString(LOC(),{minimumFractionDigits:digits,maximumFractionDigits:digits});
+}
+function fmtN(v){ return v.toLocaleString(LOC()); }
+
+function loadAll(){
+  for(const f of FIELDS){
+    const v = localStorage.getItem(LS_PREFIX+f);
+    if(v!==null) document.getElementById(f).value = v;
+  }
+  for(const c of CHECKS){
+    const v = localStorage.getItem(LS_PREFIX+c);
+    if(v!==null) document.getElementById(c).checked = (v==="true");
+  }
+}
+function persistAll(){
+  for(const f of FIELDS) localStorage.setItem(LS_PREFIX+f, document.getElementById(f).value);
+  for(const c of CHECKS) localStorage.setItem(LS_PREFIX+c, document.getElementById(c).checked);
+}
+
+/* ====== Berechnung (Formeln des Original-Rechners) ====== */
+function calc(){
+  const c=num("common"), r=num("rare"), e=num("epic"), l=num("legendary");
+  const total = c+r+e+l;
+  const country = document.getElementById("country").value;
+  const badges = num("badges");
+  const bPct = badgePercent(badges);
+
+  const basePerSec = c*RATES.common + r*RATES.rare + e*RATES.epic + l*RATES.legendary;
+  const withBadge = basePerSec * (1 + bPct);
+
+  let boost = adBoost(total, country);
+  document.getElementById("autoBoost").textContent = boost + "×";
+  document.getElementById("overrideBoostValue").disabled = !document.getElementById("overrideBoost").checked;
+  if(document.getElementById("overrideBoost").checked) boost = Math.max(1, num("overrideBoostValue"));
+
+  const bh = Math.min(24, num("boostHours"));
+  const srbVal = num("srbValue"), srbHours = num("srbHours");
+
+  // Pro Tag: bh Stunden geboostet, Rest unboosted (wie calcPerDay im Original)
+  const perDayUnboosted = withBadge*86400;
+  const perDayBoosted = withBadge*3600*(24-bh) + withBadge*boost*3600*bh;
+
+  // Monat/Jahr inkl. Super-Rent-Boost (wie setEarnings im Original)
+  const srbDaysPerMonth = srbHours/24;
+  const srbPerDay = withBadge*3600*(24-bh) + withBadge*srbVal*3600*bh;
+  let perMonthBoosted = perDayBoosted*DAYS_PER_MONTH;
+  let perYearBoosted = perDayBoosted*DAYS_PER_YEAR;
+  if(bh>0 && srbHours>0){
+    perMonthBoosted = perDayBoosted*(DAYS_PER_MONTH-srbDaysPerMonth) + srbPerDay*srbDaysPerMonth;
+    perYearBoosted  = perDayBoosted*(DAYS_PER_YEAR-srbDaysPerMonth*12) + srbPerDay*srbDaysPerMonth*12;
+  }
+
+  // Einnahmen-Tabelle
+  const rows = [
+    [T("r_sec"), withBadge, withBadge*boost, 10],
+    [T("r_hour"), withBadge*3600, withBadge*boost*3600, 7],
+    [T("r_day"), perDayUnboosted, perDayBoosted, 5],
+    [T("r_week"), perDayUnboosted*7, perDayBoosted*7, 4],
+    [T("r_month", DAYS_PER_MONTH.toFixed(1)), perDayUnboosted*DAYS_PER_MONTH, perMonthBoosted, 3],
+    [T("r_year"), perDayUnboosted*DAYS_PER_YEAR, perYearBoosted, 2]
+  ];
+  document.getElementById("earningsBody").innerHTML = rows.map(([n,u,b,d]) =>
+    `<tr><td>${n}</td><td>${fmt$(u,d)}</td><td style="color:var(--accent)">${fmt$(b,d)}</td></tr>`).join("");
+
+  // Anzeige Parcels / Badges
+  document.getElementById("totalParcels").textContent = fmtN(total);
+  const pctIds = {pctC:c, pctR:r, pctE:e, pctL:l};
+  for(const [id,count] of Object.entries(pctIds))
+    document.getElementById(id).textContent = total>0 ? "("+(count/total*100).toFixed(2)+" %)" : "";
+  document.getElementById("rentShare").textContent = basePerSec===0 ? "–" :
+    [c*RATES.common, r*RATES.rare, e*RATES.epic, l*RATES.legendary]
+      .map(x=>(x/basePerSec*100).toFixed(2)+"%").join(" / ");
+  document.getElementById("badgeBoost").textContent = (bPct*100)+" %";
+  const toNext = badgesToNextTier(badges);
+  document.getElementById("nextBadgeInfo").textContent = bPct>=.25 ? T("badge_max") :
+    T("badge_to", toNext, (badgePercent(badges+toNext))*100);
+  document.getElementById("nextBadgeAB").textContent = bPct>=.25 ? "–" :
+    fmtN(toNext*BADGE_COST_AB)+" AB";
+
+  // Portfolio (wie Original: erste 200 AB gratis, AB-Paketkurs)
+  const freeBadges = Math.min(num("freeBadges"), badges);
+  const investedAB = total*PARCEL_COST_AB + (badges-freeBadges)*BADGE_COST_AB;
+  let portfolioAB = investedAB>199 ? investedAB-200 : 0;
+  portfolioAB += num("atlasBucks");
+  const diamonds = num("diamonds");
+  if(document.getElementById("includeDiamonds").checked) portfolioAB += diamonds*2;
+  const [abAmt, abCost] = document.getElementById("abPackage").value.split("|").map(Number);
+  const portfolioValue = portfolioAB/abAmt*abCost + num("rentTotal");
+  document.getElementById("portfolioValue").textContent = fmt$(portfolioValue,2);
+  document.getElementById("investedAB").textContent = fmtN(investedAB)+" AB";
+
+  // Fortschritt
+  const sd = document.getElementById("startDate").value;
+  let avgAB = 0;
+  if(sd){
+    const days = Math.max(1, Math.round((Date.now()-new Date(sd).getTime())/86400000));
+    avgAB = portfolioAB/days;
+    document.getElementById("daysPlaying").textContent = fmtN(days);
+    document.getElementById("avgABPerDay").textContent = avgAB.toFixed(2)+" AB";
+  } else {
+    document.getElementById("daysPlaying").textContent = "–";
+    document.getElementById("avgABPerDay").textContent = "–";
+  }
+  const goal = num("goalAB");
+  if(goal>0 && avgAB>0){
+    const need = Math.max(0, goal-num("atlasBucks"));
+    const d = Math.ceil(need/avgAB);
+    const when = new Date(Date.now()+d*86400000).toLocaleDateString(LOC());
+    document.getElementById("daysToGoal").textContent = need===0 ? T("goal_reached") : T("goal_days", d, when);
+  } else document.getElementById("daysToGoal").textContent = "–";
+
+  const spins = document.getElementById("explorersClub").checked ? 7 : 5;
+  document.getElementById("diamondDays").textContent = diamonds>0 ? (diamonds/spins).toFixed(1)+T("unit_days") : "–";
+  document.getElementById("avgPower").textContent = total>0 ? ((basePerSec/total)/RATES.common).toFixed(4)+"× Common" : "–";
+  document.getElementById("meanPerSec").textContent = total>0 ? fmt$(withBadge/total, 11) : "–";
+  document.getElementById("parcelValue").textContent = total>0 ? (withBadge/RATES.common).toFixed(2) : "–";
+
+  renderBreakeven(total, country, bh, bPct,
+    total>0 ? basePerSec/total : AVG_RATE,
+    document.getElementById("overrideBoost").checked);
+
+  persistAll();
+  updateCityTotals();
+  return { total, badges, ab: num("atlasBucks"), perDayBoosted, portfolioValue };
+}
+
+/* ====== Snapshots / Verlauf ====== */
+function getSnapshots(){ try{ return JSON.parse(localStorage.getItem(LS_PREFIX+"snapshots"))||[]; }catch(e){ return []; } }
+function setSnapshots(s){ localStorage.setItem(LS_PREFIX+"snapshots", JSON.stringify(s)); renderSnapshots(); }
+
+function saveSnapshot(){
+  const cur = calc();
+  const snaps = getSnapshots();
+  snaps.push({
+    ts: Date.now(),
+    common: num("common"), rare: num("rare"), epic: num("epic"), legendary: num("legendary"),
+    total: cur.total, badges: cur.badges, ab: cur.ab,
+    diamonds: num("diamonds"), rentTotal: num("rentTotal"),
+    perDay: cur.perDayBoosted, portfolio: cur.portfolioValue
+  });
+  snaps.sort((a,b)=>a.ts-b.ts);
+  setSnapshots(snaps);
+}
+function deleteSnapshot(ts){
+  if(!confirm(T("confirm_delSnap"))) return;
+  setSnapshots(getSnapshots().filter(s=>s.ts!==ts));
+}
+function renderSnapshots(){
+  const snaps = getSnapshots();
+  const tbody = document.getElementById("snapshotBody");
+  tbody.innerHTML = snaps.slice().reverse().map((s,i,arr)=>{
+    const prev = arr[i+1];
+    const d = (v,p)=> prev&&v>p ? ` <span class="delta-up">+${fmtN(v-p)}</span>` : "";
+    return `<tr>
+      <td>${new Date(s.ts).toLocaleDateString(LOC())}</td>
+      <td>${fmtN(s.total)}${d(s.total,prev?.total)}</td>
+      <td>${s.badges}${d(s.badges,prev?.badges)}</td>
+      <td>${fmtN(s.ab)}</td>
+      <td>${fmt$(s.perDay,4)}</td>
+      <td>${fmt$(s.portfolio,2)}</td>
+      <td><button class="danger" title="${T("del")}" onclick="deleteSnapshot(${s.ts})">✕</button></td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="7" style="text-align:center;color:var(--muted)">${T("snap_empty")}</td></tr>`;
+  chartSnaps = snaps;
+  drawChart(snaps);
+  renderChartSummary();
+}
+/* ----- Diagramm: mehrere wählbare Linien, Hover-Tooltip, Zusammenfassung ----- */
+let chartSnaps = [];
+const CHART_SERIES = [
+  { key:"portfolio", color:"#3ddc84", get:s=>s.portfolio, fmt:v=>fmt$(v,2) },
+  { key:"parcels",   color:"#4db8ff", get:s=>s.total,     fmt:v=>fmtN(v) },
+  { key:"perDay",    color:"#ffd166", get:s=>s.perDay,    fmt:v=>fmt$(v,4) },
+  { key:"badges",    color:"#c77dff", get:s=>s.badges,    fmt:v=>fmtN(v) },
+  { key:"ab",        color:"#ff6b6b", get:s=>s.ab??0,     fmt:v=>fmtN(v) }
+];
+function getEnabledSeries(){
+  const raw = localStorage.getItem(LS_PREFIX+"chartSeries");
+  if(raw===null) return ["portfolio"];
+  try{ const a = JSON.parse(raw); return Array.isArray(a) ? a : ["portfolio"]; }
+  catch(e){ return ["portfolio"]; }
+}
+function renderChartLegend(){
+  const enabled = getEnabledSeries();
+  const el = document.getElementById("chartLegend");
+  el.innerHTML = `<span>${T("chart_legendTitle")}</span>` + CHART_SERIES.map(s=>
+    `<label><input type="checkbox" data-k="${s.key}" ${enabled.includes(s.key)?"checked":""}>
+     <span class="dot" style="background:${s.color}"></span>${T("series_"+s.key)}</label>`).join("");
+  el.querySelectorAll("input").forEach(cb => cb.addEventListener("change", ()=>{
+    const sel = [...el.querySelectorAll("input:checked")].map(c=>c.dataset.k);
+    localStorage.setItem(LS_PREFIX+"chartSeries", JSON.stringify(sel));
+    drawChart(chartSnaps); renderChartSummary();
+  }));
+}
+function chartGeom(cv, snaps){
+  const pad=45, w=cv.width-pad*2, h=cv.height-30;
+  const t0 = snaps[0].ts, t1 = snaps[snaps.length-1].ts;
+  return { pad, w, h, t0, tspan:(t1-t0)||1 };
+}
+function seriesRange(serie, snaps){
+  const vals = snaps.map(serie.get);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  return { min, span:(max-min)||1 };
+}
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || "#8fa3b8"; }
+function drawChart(snaps, hoverIdx){
+  const cv = document.getElementById("chart"), ctx = cv.getContext("2d");
+  const cMuted = cssVar("--muted"), cBorder = cssVar("--border");
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const msg = txt => { ctx.fillStyle=cMuted; ctx.font="14px Segoe UI"; ctx.textAlign="center";
+                       ctx.fillText(txt, cv.width/2, cv.height/2); };
+  if(snaps.length<2){ msg(T("chart_need2")); return; }
+  const enabled = CHART_SERIES.filter(s=>getEnabledSeries().includes(s.key));
+  if(enabled.length===0){ msg(T("chart_noSeries")); return; }
+  const g = chartGeom(cv, snaps);
+
+  // Gitter; Achsenwerte nur bei genau einer Linie (sonst eigene Skala je Linie)
+  ctx.strokeStyle=cBorder; ctx.fillStyle=cMuted; ctx.font="11px Segoe UI"; ctx.textAlign="left";
+  const single = enabled.length===1 ? seriesRange(enabled[0], snaps) : null;
+  for(let i=0;i<=3;i++){
+    const y = 10 + g.h - (g.h*i/3);
+    ctx.beginPath(); ctx.moveTo(g.pad,y); ctx.lineTo(g.pad+g.w,y); ctx.stroke();
+    const label = single ? enabled[0].fmt(single.min + single.span*i/3) : Math.round(100*i/3)+" %";
+    ctx.fillText(label, 2, y+4);
+  }
+
+  // Hover-Führungslinie
+  if(hoverIdx!=null && snaps[hoverIdx]){
+    const hx = g.pad + (snaps[hoverIdx].ts-g.t0)/g.tspan*g.w;
+    ctx.strokeStyle=cMuted; ctx.setLineDash([4,4]); ctx.beginPath();
+    ctx.moveTo(hx,10); ctx.lineTo(hx,10+g.h); ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // Linien (jede auf ihren eigenen Bereich normiert)
+  for(const serie of enabled){
+    const r = seriesRange(serie, snaps);
+    const pt = s => [ g.pad + (s.ts-g.t0)/g.tspan*g.w, 10 + g.h - (serie.get(s)-r.min)/r.span*g.h ];
+    ctx.strokeStyle = serie.color; ctx.lineWidth=2; ctx.beginPath();
+    snaps.forEach((s,i)=>{ const [x,y]=pt(s); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.stroke();
+    ctx.fillStyle = serie.color;
+    snaps.forEach((s,i)=>{ const [x,y]=pt(s);
+      ctx.beginPath(); ctx.arc(x,y, i===hoverIdx?5:3, 0, 7); ctx.fill(); });
+  }
+
+  ctx.fillStyle=cMuted; ctx.textAlign="center";
+  ctx.fillText(new Date(g.t0).toLocaleDateString(LOC()), g.pad, cv.height-4);
+  ctx.fillText(new Date(snaps[snaps.length-1].ts).toLocaleDateString(LOC()), g.pad+g.w, cv.height-4);
+  ctx.fillText(T("chart_title"), cv.width/2, cv.height-4);
+}
+function renderChartSummary(){
+  const el = document.getElementById("chartSummary");
+  const snaps = chartSnaps;
+  const enabled = CHART_SERIES.filter(s=>getEnabledSeries().includes(s.key));
+  if(snaps.length<2 || enabled.length===0){ el.innerHTML=""; return; }
+  const first = snaps[0], last = snaps[snaps.length-1];
+  el.innerHTML = T("chart_devel") + enabled.map(serie=>{
+    const a = serie.get(first), b = serie.get(last), d = b-a;
+    const pct = a!==0 ? ((d/Math.abs(a))*100).toFixed(1)+" %" : "–";
+    const sign = d>=0 ? "+" : "−";
+    const dTxt = serie.key==="portfolio"||serie.key==="perDay" ? fmt$(Math.abs(d), serie.key==="perDay"?4:2) : fmtN(Math.abs(d));
+    return `<span style="white-space:nowrap"><span class="dot" style="background:${serie.color};vertical-align:-1px"></span>
+      ${T("series_"+serie.key)}: ${serie.fmt(a)} → ${serie.fmt(b)} (${sign}${dTxt} / ${sign}${pct})</span>`;
+  }).join(" &nbsp;•&nbsp; ");
+}
+function chartHover(e){
+  const cv = document.getElementById("chart"), tip = document.getElementById("chartTip");
+  if(chartSnaps.length<2){ tip.style.display="none"; return; }
+  const enabled = CHART_SERIES.filter(s=>getEnabledSeries().includes(s.key));
+  if(enabled.length===0){ tip.style.display="none"; return; }
+  const rect = cv.getBoundingClientRect();
+  const x = (e.clientX-rect.left) * (cv.width/rect.width);
+  const g = chartGeom(cv, chartSnaps);
+  let idx = 0, best = Infinity;
+  chartSnaps.forEach((s,i)=>{
+    const sx = g.pad + (s.ts-g.t0)/g.tspan*g.w;
+    const dist = Math.abs(sx-x);
+    if(dist<best){ best=dist; idx=i; }
+  });
+  drawChart(chartSnaps, idx);
+  const s = chartSnaps[idx];
+  tip.innerHTML = `<b>${new Date(s.ts).toLocaleDateString(LOC())}</b><br>` +
+    enabled.map(serie=>`<span class="dot" style="background:${serie.color};vertical-align:-1px"></span> ${T("series_"+serie.key)}: <b>${serie.fmt(serie.get(s))}</b>`).join("<br>");
+  tip.style.display = "block";
+  const px = e.clientX-rect.left, py = e.clientY-rect.top;
+  tip.style.left = Math.min(px+14, rect.width-tip.offsetWidth-4) + "px";
+  tip.style.top = Math.max(0, Math.min(py+14, rect.height-tip.offsetHeight-4)) + "px";
+}
+function chartLeave(){
+  document.getElementById("chartTip").style.display = "none";
+  drawChart(chartSnaps);
+}
+
+/* ====== Städte & Bürgermeister ====== */
+function getCities(){ try{ return JSON.parse(localStorage.getItem(LS_PREFIX+"cities"))||[]; }catch(e){ return []; } }
+let cities = getCities();
+function persistCities(){ localStorage.setItem(LS_PREFIX+"cities", JSON.stringify(cities)); }
+
+function addCity(){
+  cities.push({name:"", parcels:0, mayor:false, mayorAB:0});
+  persistCities(); renderCities();
+  const rows = document.querySelectorAll("#cityBody input[type=text]");
+  if(rows.length) rows[rows.length-1].focus();
+}
+function deleteCity(i){
+  if(cities[i].name && !confirm(T("confirm_delCity", cities[i].name))) return;
+  cities.splice(i,1);
+  if(openCityLog===i) openCityLog = null;
+  else if(openCityLog!==null && openCityLog>i) openCityLog--;
+  persistCities(); renderCities();
+}
+function updateCity(i, field, value){
+  if(field==="name") cities[i].name = value;
+  else if(field==="mayor"){ cities[i].mayor = value; persistCities(); renderCities(); return; }
+  else cities[i][field] = Math.max(0, parseFloat(value)||0);
+  persistCities(); updateCityTotals();
+}
+function updateCityTotals(){
+  const parcels = cities.reduce((s,c)=>s+c.parcels,0);
+  const mayors = cities.filter(c=>c.mayor).length;
+  const mayorAB = cities.reduce((s,c)=>s+(c.mayor?c.mayorAB:0),0);
+  document.getElementById("cityTotalCell").textContent = T("cityTotal", cities.length);
+  document.getElementById("cityParcels").textContent = fmtN(parcels);
+  document.getElementById("cityMayors").textContent = mayors+"×";
+  document.getElementById("cityMayorAB").textContent = fmtN(mayorAB)+" AB";
+  const total = num("common")+num("rare")+num("epic")+num("legendary");
+  document.getElementById("cityHint").textContent = total>0 && parcels!==total
+    ? T("city_hint", fmtN(parcels), fmtN(total))
+    : "";
+  // Bürgermeister-AB über alle datierten Verlaufs-Einträge: 30 T / 90 T / 1 Jahr / Gesamt
+  const cut = days => new Date(Date.now() - days*86400000).toISOString().slice(0,10);
+  const c30 = cut(30), c90 = cut(90), c365 = cut(365);
+  let last30 = 0, last90 = 0, lastYear = 0, allTime = 0, hasLog = false;
+  for(const c of cities){
+    for(const e of (Array.isArray(c.mayorLog)?c.mayorLog:[])){
+      hasLog = true;
+      allTime += e.ab;
+      if(e.date >= c365) lastYear += e.ab;
+      if(e.date >= c90) last90 += e.ab;
+      if(e.date >= c30) last30 += e.ab;
+    }
+  }
+  document.getElementById("mayorStats").innerHTML = hasLog
+    ? T("mayor_stats", fmtN(last30), fmtN(last90), fmtN(lastYear), fmtN(allTime))
+    : "";
+}
+/* Datierter Verlauf der Bürgermeister-AB: "+1" verbucht 20 AB mit heutigem Datum,
+   über 📅 lassen sich Einträge mit beliebigem Datum/Betrag nachtragen oder löschen.
+   Das Summenfeld bleibt zusätzlich frei editierbar. */
+const MAYOR_REWARD_AB = 20;
+let openCityLog = null; // Index der Stadt mit aufgeklapptem Verlauf
+
+function cityLog(c){ return Array.isArray(c.mayorLog) ? c.mayorLog : (c.mayorLog = []); }
+
+function cityPlus(i){
+  const c = cities[i];
+  cityLog(c).push({ date: new Date().toISOString().slice(0,10), ab: MAYOR_REWARD_AB });
+  c.mayorAB = (parseFloat(c.mayorAB)||0) + MAYOR_REWARD_AB;
+  persistCities(); renderCities();
+}
+function toggleCityLog(i){
+  openCityLog = openCityLog===i ? null : i;
+  renderCities();
+}
+function addCityLogEntry(i){
+  const date = document.getElementById("clDate").value;
+  const ab = parseInt(document.getElementById("clAB").value,10);
+  if(!date){ alert(T("alert_date")); return; }
+  if(isNaN(ab) || ab<1) return;
+  const c = cities[i];
+  cityLog(c).push({ date, ab });
+  c.mayorAB = (parseFloat(c.mayorAB)||0) + ab;
+  persistCities(); renderCities();
+}
+function delCityLogEntry(i, j){
+  const c = cities[i];
+  const entry = cityLog(c)[j];
+  if(!entry) return;
+  c.mayorAB = Math.max(0, (parseFloat(c.mayorAB)||0) - entry.ab);
+  c.mayorLog.splice(j,1);
+  persistCities(); renderCities();
+}
+function cityLogDetailRow(c, i){
+  const today = new Date().toISOString().slice(0,10);
+  const entries = cityLog(c).map((e,j)=>({e,j}))
+    .sort((a,b)=> b.e.date.localeCompare(a.e.date) || b.j-a.j);
+  const list = entries.map(({e,j}) =>
+    `<div class="sec-row"><span>${new Date(e.date+"T00:00").toLocaleDateString(LOC())} — +${fmtN(e.ab)} AB</span>
+     <button class="danger" title="${T("del")}" onclick="delCityLogEntry(${i},${j})">✕</button></div>`).join("");
+  const sum = cityLog(c).reduce((s,e)=>s+e.ab,0);
+  return `<tr><td colspan="5" style="background:rgba(77,184,255,.05)">
+    <div class="subh">📅 ${T("city_logTitle", c.name.replace(/</g,"&lt;") || "–")}</div>
+    <div class="btnrow" style="margin-top:0">
+      <input type="date" id="clDate" value="${today}">
+      <input type="number" id="clAB" value="${MAYOR_REWARD_AB}" min="1" style="width:80px"> AB
+      <button class="secondary" onclick="addCityLogEntry(${i})">${T("btn_addEntry")}</button>
+    </div>
+    <div style="margin-top:8px;max-width:520px">${list || `<span class="hint">${T("city_logEmpty")}</span>`}</div>
+    ${entries.length ? `<div class="hint">${T("city_logSum", fmtN(sum), entries.length)}</div>` : ""}
+  </td></tr>`;
+}
+function renderCities(){
+  const tbody = document.getElementById("cityBody");
+  tbody.innerHTML = cities.map((c,i)=>{
+    const logCount = cityLog(c).length;
+    return `<tr>
+    <td><input type="text" value="${c.name.replace(/"/g,"&quot;")}" placeholder="${T("ph_cityName")}"
+        oninput="updateCity(${i},'name',this.value)"></td>
+    <td><input type="number" min="0" value="${c.parcels}" style="width:90px"
+        oninput="updateCity(${i},'parcels',this.value)"></td>
+    <td style="text-align:center"><input type="checkbox" ${c.mayor?"checked":""}
+        onchange="updateCity(${i},'mayor',this.checked)"></td>
+    <td style="white-space:nowrap"><input type="number" min="0" value="${c.mayorAB}" style="width:90px" ${c.mayor?"":"disabled"}
+        oninput="updateCity(${i},'mayorAB',this.value)"> AB
+      <button class="mini" ${c.mayor?"":"disabled"} title="${T("city_plus1_title")}" onclick="cityPlus(${i})">+1</button>
+      <button class="mini" title="${T("city_logBtn_title")}" onclick="toggleCityLog(${i})">📅${logCount?" "+logCount:""}</button></td>
+    <td><button class="danger" title="${T("del")}" onclick="deleteCity(${i})">✕</button></td>
+  </tr>` + (openCityLog===i ? cityLogDetailRow(c,i) : "");
+  }).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--muted)">${T("city_empty")}</td></tr>`;
+  updateCityTotals();
+}
+
+/* ====== Minispiele ====== */
+function getMinigames(){ try{ return JSON.parse(localStorage.getItem(LS_PREFIX+"minigames"))||[]; }catch(e){ return []; } }
+let minigames = getMinigames();
+function persistMinigames(){ localStorage.setItem(LS_PREFIX+"minigames", JSON.stringify(minigames)); }
+
+function addMinigame(){
+  const date = document.getElementById("mgDate").value;
+  const game = document.getElementById("mgGame").value;
+  const place = parseInt(document.getElementById("mgPlace").value,10);
+  const ab = parseInt(document.getElementById("mgAB").value,10);
+  if(!date){ alert(T("alert_date")); return; }
+  if(isNaN(place) || place<1){ alert(T("alert_place")); return; }
+  minigames.push({ id: Date.now(), date, game, place, ab: isNaN(ab)||ab<0?0:ab });
+  persistMinigames(); renderMinigames();
+  document.getElementById("mgPlace").value = "";
+  document.getElementById("mgAB").value = "";
+}
+function deleteMinigame(id){
+  minigames = minigames.filter(m=>m.id!==id);
+  persistMinigames(); renderMinigames();
+}
+function renderMinigames(){
+  const tbody = document.getElementById("mgBody");
+  const sorted = minigames.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.id-a.id);
+  tbody.innerHTML = sorted.map(m=>`<tr>
+    <td>${new Date(m.date+"T00:00").toLocaleDateString(LOC())}</td>
+    <td>${m.game}</td>
+    <td>${m.place}.</td>
+    <td>${fmtN(m.ab)} AB</td>
+    <td><button class="danger" title="${T("del")}" onclick="deleteMinigame(${m.id})">✕</button></td>
+  </tr>`).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--muted)">${T("mg_empty")}</td></tr>`;
+
+  document.getElementById("mgTotalCell").textContent = T("mgTotal", minigames.length);
+  document.getElementById("mgTotalAB").textContent = fmtN(minigames.reduce((s,m)=>s+m.ab,0))+" AB";
+  document.getElementById("mgAvgCell").textContent = minigames.length===0 ? "–" :
+    T("mgAvg", (minigames.reduce((s,m)=>s+m.place,0)/minigames.length).toFixed(1));
+
+  // Minispiel-AB nach Zeitraum: 30 T / 90 T / 1 Jahr / Gesamt
+  const cut = days => new Date(Date.now() - days*86400000).toISOString().slice(0,10);
+  const c30 = cut(30), c90 = cut(90), c365 = cut(365);
+  let last30 = 0, last90 = 0, lastYear = 0, allTime = 0;
+  for(const m of minigames){
+    allTime += m.ab;
+    if(m.date >= c365) lastYear += m.ab;
+    if(m.date >= c90) last90 += m.ab;
+    if(m.date >= c30) last30 += m.ab;
+  }
+  document.getElementById("mgStats").innerHTML = minigames.length
+    ? T("mg_stats", fmtN(last30), fmtN(last90), fmtN(lastYear), fmtN(allTime))
+    : "";
+
+  // Pro-Spiel-Statistik: Anzahl, bester Platz, AB-Summe
+  const byGame = {};
+  for(const m of minigames){
+    const g = byGame[m.game] ??= {n:0, best:Infinity, ab:0};
+    g.n++; g.best = Math.min(g.best, m.place); g.ab += m.ab;
+  }
+  document.getElementById("mgSummary").textContent = Object.entries(byGame)
+    .map(([g,s])=>T("mg_summary", g, s.n, s.best, fmtN(s.ab)))
+    .join(" • ");
+}
+
+/* ====== Boost-Stufen & Breakeven ====== */
+// Stundenfaktor eines Tages: (24-bh) unboosted + bh Stunden mit Multiplikator m.
+// Tages-Einkommen = N * rate * (1+badge) * 3600 * hourFactor  →  linear in N.
+function hourFactor(mult, bh){ return (24-bh) + mult*bh; }
+
+function tierList(country){
+  let prevMax = 0;
+  return BOOST_TIERS[country].map(([max,mult])=>{
+    const row = { min: prevMax+1, max, mult };
+    prevMax = max;
+    return row;
+  });
+}
+
+function renderBreakeven(total, country, bh, bPct, meanRate, override){
+  const sumEl = document.getElementById("beSummary");
+  const body = document.getElementById("beBody");
+  const tiers = tierList(country);
+  const dayEarn = (N,mult) => N * meanRate * (1+bPct) * 3600 * hourFactor(mult,bh);
+  const ci = tiers.findIndex(t => total <= t.max);
+
+  // ---- Stufen-Tabelle ----
+  body.innerHTML = tiers.map((t,i)=>{
+    let be = "—";
+    if(i>0){
+      if(bh===0){
+        be = fmtN(t.min); // ohne Boost-Stunden kein Einkommensknick
+      } else {
+        const prev = tiers[i-1];
+        const beN = Math.ceil(prev.max * hourFactor(prev.mult,bh) / hourFactor(t.mult,bh));
+        be = beN<=t.max ? fmtN(Math.max(beN, t.min)) : "—";
+      }
+    }
+    const isCur = total>0 && i===ci;
+    const range = t.max===Infinity ? fmtN(t.min)+"+" : fmtN(t.min)+"–"+fmtN(t.max);
+    const here = isCur ? ` <span style="color:var(--accent2)">⬅ ${T("be_youAreHere", fmtN(total))}</span>` : "";
+    const dMin = fmt$(dayEarn(t.min,t.mult),4);
+    const dMax = t.max===Infinity ? "—" : fmt$(dayEarn(t.max,t.mult),4);
+    return `<tr${isCur?' style="background:rgba(77,184,255,.08)"':''}>
+      <td>${range}${here}</td><td>${t.mult}×</td>
+      <td>${i>0 && be!=="—" ? "<b>"+be+"</b>" : be}</td>
+      <td>${dMin}</td><td>${dMax}</td></tr>`;
+  }).join("");
+
+  // ---- Zusammenfassung ----
+  const parts = [];
+  if(total<=0){
+    sumEl.innerHTML = `<div class="be-line">${T("be_noParcels")}</div>`;
+    return;
+  }
+  const cur = tiers[ci];
+  const dNow = dayEarn(total, cur.mult);
+
+  parts.push(`<div class="be-line">${cur.max===Infinity
+    ? T("be_currentLast", fmtN(cur.min), cur.mult)
+    : T("be_current", fmtN(cur.min), fmtN(cur.max), cur.mult)}</div>`);
+  parts.push(`<div class="be-line">${T("be_perDayNow", fmt$(dNow,4))}</div>`);
+
+  if(bh===0){
+    parts.push(`<div class="be-line">${T("be_noBoostHours")}</div>`);
+  } else if(cur.max!==Infinity){
+    // Fortschrittsbalken innerhalb der aktuellen Stufe
+    const pct = Math.max(2, Math.min(100, ((total-cur.min+1)/(cur.max-cur.min+1))*100));
+    parts.push(`<div class="be-bar"><div class="be-fill" style="width:${pct}%"></div>
+      <div class="be-label">${fmtN(total)} / ${fmtN(cur.max)}</div></div>`);
+    parts.push(`<div class="be-line">${T("be_toBoundary", fmtN(cur.max-total), fmtN(cur.max))}</div>`);
+
+    const next = tiers[ci+1];
+    parts.push(`<div class="be-line">${T("be_drop", cur.mult, next.mult)}</div>`);
+
+    // Breakeven-Suche über alle folgenden Stufen (linear in N → Vergleich der Stundenfaktoren)
+    let beN = null, beTier = null;
+    for(let i=ci+1; i<tiers.length; i++){
+      const t = tiers[i];
+      let n = Math.ceil(total * hourFactor(cur.mult,bh) / hourFactor(t.mult,bh));
+      if(n < t.min) n = t.min;
+      if(n <= t.max){ beN = n; beTier = t; break; }
+    }
+    if(beN!==null){
+      parts.push(`<div class="be-line">${T("be_breakevenAt", fmtN(beN), fmt$(dayEarn(beN,beTier.mult),4))}</div>`);
+      if(beN > cur.max+1){
+        parts.push(`<div class="be-line be-warn">${T("be_deadzone", fmtN(cur.max+1), fmtN(beN-1), fmt$(dNow,4))}</div>`);
+      }
+    }
+  } else {
+    parts.push(`<div class="be-line">${T("be_lastTier")}</div>`);
+  }
+
+  if(override) parts.push(`<div class="hint">${T("be_overrideNote")}</div>`);
+  parts.push(`<div class="hint">${T("be_assume", (meanRate/RATES.common).toFixed(2))}</div>`);
+  sumEl.innerHTML = parts.join("");
+}
+
+/* ====== Einstellungen (Themes, Layout, eigene Spiele) ====== */
+const DEFAULT_GAMES = ["Warship","Bowling","Racer","Fishing","Golf","Vintage Fishing","Vintage Racer"];
+const SECTION_KEYS = ["parcels","account","boost","earnings","portfolio","breakeven","cities","minigames","history"];
+const SECTION_LABELS = { parcels:"sec_parcels", account:"sec_account", boost:"sec_boost",
+  earnings:"h_earnings", portfolio:"h_portfolio", breakeven:"h_breakeven",
+  cities:"h_cities", minigames:"h_minigames", history:"h_snapshots" };
+const THEMES = {
+  ocean:  { bg:"#0d1421", panel:"#15202f", panel2:"#1b2a3d", border:"#2b4057", text:"#e8eef5", muted:"#8fa3b8", accent:"#3ddc84", accent2:"#4db8ff" },
+  forest: { bg:"#0c1510", panel:"#12201a", panel2:"#18302a", border:"#2b5747", text:"#e8f5ee", muted:"#8fb8a4", accent:"#4ade80", accent2:"#a3e635" },
+  violet: { bg:"#140d21", panel:"#1d1530", panel2:"#271d40", border:"#453364", text:"#efe8f5", muted:"#a78fb8", accent:"#c77dff", accent2:"#ff7dcb" },
+  amoled: { bg:"#000000", panel:"#0b0b0b", panel2:"#161616", border:"#2c2c2c", text:"#e8e8e8", muted:"#9a9a9a", accent:"#3ddc84", accent2:"#4db8ff" },
+  light:  { bg:"#eef2f7", panel:"#ffffff", panel2:"#e3eaf2", border:"#bccadb", text:"#1b2733", muted:"#5d7186", accent:"#0e9f57", accent2:"#1769aa" }
+};
+const DEFAULT_SETTINGS = { name:"", theme:"ocean", accent:"", accent2:"", fontSize:"m",
+  order:[...SECTION_KEYS], hidden:[], customGames:[] };
+
+function normalizeSettings(s){
+  const out = { ...DEFAULT_SETTINGS, ...(s||{}) };
+  if(!THEMES[out.theme]) out.theme = "ocean";
+  if(!Array.isArray(out.order)) out.order = [...SECTION_KEYS];
+  out.order = out.order.filter(k=>SECTION_KEYS.includes(k));
+  for(const k of SECTION_KEYS) if(!out.order.includes(k)) out.order.push(k);
+  if(!Array.isArray(out.hidden)) out.hidden = [];
+  out.hidden = out.hidden.filter(k=>SECTION_KEYS.includes(k));
+  if(!Array.isArray(out.customGames)) out.customGames = [];
+  out.customGames = out.customGames.map(g=>String(g)).filter(g=>g.trim()!=="");
+  return out;
+}
+let SETTINGS;
+try{ SETTINGS = normalizeSettings(JSON.parse(localStorage.getItem(LS_PREFIX+"settings"))); }
+catch(e){ SETTINGS = normalizeSettings(null); }
+function saveSettings(){ localStorage.setItem(LS_PREFIX+"settings", JSON.stringify(SETTINGS)); }
+
+function applySettings(){
+  const root = document.documentElement;
+  const th = THEMES[SETTINGS.theme];
+  for(const [k,v] of Object.entries(th)) root.style.setProperty("--"+k, v);
+  if(SETTINGS.accent)  root.style.setProperty("--accent",  SETTINGS.accent);
+  if(SETTINGS.accent2) root.style.setProperty("--accent2", SETTINGS.accent2);
+  root.style.fontSize = { s:"87.5%", m:"100%", l:"115%" }[SETTINGS.fontSize] || "100%";
+  document.getElementById("playerName").textContent = SETTINGS.name ? "– "+SETTINGS.name : "";
+  document.querySelectorAll("[data-sec]").forEach(el=>{
+    const k = el.dataset.sec;
+    el.style.order = SETTINGS.order.indexOf(k);
+    el.style.display = SETTINGS.hidden.includes(k) ? "none" : "";
+  });
+  rebuildGameSelect();
+  if(chartSnaps.length) drawChart(chartSnaps); // Canvas-Farben ans Theme anpassen
+}
+function rebuildGameSelect(){
+  const sel = document.getElementById("mgGame");
+  const cur = sel.value;
+  sel.innerHTML = [...DEFAULT_GAMES, ...SETTINGS.customGames]
+    .map(g=>`<option>${g.replace(/</g,"&lt;")}</option>`).join("");
+  if([...sel.options].some(o=>o.value===cur)) sel.value = cur;
+}
+function toggleSettings(){
+  const c = document.getElementById("settingsCard");
+  c.style.display = c.style.display==="none" ? "" : "none";
+}
+function renderSettingsPanel(){
+  document.getElementById("setName").value = SETTINGS.name;
+  document.getElementById("setTheme").value = SETTINGS.theme;
+  document.getElementById("setAccent").value  = SETTINGS.accent  || THEMES[SETTINGS.theme].accent;
+  document.getElementById("setAccent2").value = SETTINGS.accent2 || THEMES[SETTINGS.theme].accent2;
+  document.getElementById("setFont").value = SETTINGS.fontSize;
+  renderSecList();
+  renderGameChips();
+}
+function renderSecList(){
+  document.getElementById("secList").innerHTML = SETTINGS.order.map((k,i)=>`<div class="sec-row">
+    <label><input type="checkbox" ${SETTINGS.hidden.includes(k)?"":"checked"}
+      onchange="toggleSection('${k}',this.checked)"><span>${T(SECTION_LABELS[k])}</span></label>
+    <span><button class="mini" onclick="moveSection(${i},-1)" ${i===0?"disabled":""}>▲</button>
+    <button class="mini" onclick="moveSection(${i},1)" ${i===SETTINGS.order.length-1?"disabled":""}>▼</button></span>
+  </div>`).join("");
+}
+function toggleSection(key, visible){
+  SETTINGS.hidden = visible ? SETTINGS.hidden.filter(k=>k!==key) : [...SETTINGS.hidden, key];
+  saveSettings(); applySettings();
+}
+function moveSection(i, dir){
+  const j = i+dir;
+  if(j<0 || j>=SETTINGS.order.length) return;
+  [SETTINGS.order[i], SETTINGS.order[j]] = [SETTINGS.order[j], SETTINGS.order[i]];
+  saveSettings(); applySettings(); renderSecList();
+}
+function addCustomGame(){
+  const inp = document.getElementById("newGame");
+  const v = inp.value.trim();
+  if(!v) return;
+  if(![...DEFAULT_GAMES, ...SETTINGS.customGames].includes(v)){
+    SETTINGS.customGames.push(v);
+    saveSettings(); applySettings(); renderGameChips();
+  }
+  inp.value = "";
+}
+function removeCustomGame(i){
+  SETTINGS.customGames.splice(i,1);
+  saveSettings(); applySettings(); renderGameChips();
+}
+function renderGameChips(){
+  document.getElementById("gameChips").innerHTML = SETTINGS.customGames.map((g,i)=>
+    `<span class="chip">${g.replace(/</g,"&lt;")}<button onclick="removeCustomGame(${i})" title="${T("del")}">✕</button></span>`
+  ).join("") || `<span class="hint">${T("set_noGames")}</span>`;
+}
+function resetSettings(){
+  if(!confirm(T("confirm_reset"))) return;
+  SETTINGS = normalizeSettings(null);
+  saveSettings(); applySettings(); renderSettingsPanel();
+}
+function clearAllData(){
+  if(!confirm(T("confirm_clear1"))) return;
+  if(!confirm(T("confirm_clear2"))) return;
+  // Nur die Tracker-Schlüssel (aet_*) entfernen – nicht den gesamten Browser-Speicher,
+  // den sich lokale Dateien je nach Browser teilen können.
+  const keys = [];
+  for(let i=0; i<localStorage.length; i++){
+    const k = localStorage.key(i);
+    if(k && k.startsWith(LS_PREFIX)) keys.push(k);
+  }
+  keys.forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
+
+/* ====== Versions-Badge & Changelog ====== */
+function renderChangelog(){
+  document.getElementById("verBadge").textContent = "v"+VERSION;
+  document.getElementById("changelog").innerHTML =
+    `<div class="subh">${T("changelog_title")}</div>` +
+    CHANGELOG.map((e,idx)=>`<details ${idx===0?"open":""}>
+      <summary>Version ${e.v}</summary>
+      <ul>${(lang==="en"?e.en:e.de).map(li=>`<li>${li}</li>`).join("")}</ul>
+    </details>`).join("");
+}
+function toggleChangelog(){
+  const c = document.getElementById("changelog");
+  c.style.display = c.style.display==="block" ? "none" : "block";
+}
+// Klick außerhalb schließt das Changelog
+document.addEventListener("click", e=>{
+  if(!e.target.closest(".ver-wrap")){
+    const c = document.getElementById("changelog");
+    if(c) c.style.display = "none";
+  }
+});
+
+/* ====== Hilfe ein-/ausblenden ====== */
+function toggleHelp(){
+  const on = !document.body.classList.contains("show-help");
+  document.body.classList.toggle("show-help", on);
+  localStorage.setItem(LS_PREFIX+"showHelp", on);
+  document.getElementById("helpToggle").textContent = on ? T("btnHelpOff") : T("btnHelpOn");
+}
+
+/* ====== Export / Import ====== */
+function exportData(){
+  const data = { exported: new Date().toISOString(), inputs:{}, checks:{}, snapshots: getSnapshots(), cities, minigames, settings: SETTINGS };
+  for(const f of FIELDS) data.inputs[f] = document.getElementById(f).value;
+  for(const c of CHECKS) data.checks[c] = document.getElementById(c).checked;
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "atlas-earth-stats-"+new Date().toISOString().slice(0,10)+".json";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function importData(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const data = JSON.parse(reader.result);
+      if(data.inputs) for(const f of FIELDS) if(data.inputs[f]!==undefined) document.getElementById(f).value = data.inputs[f];
+      if(data.checks) for(const c of CHECKS) if(data.checks[c]!==undefined) document.getElementById(c).checked = data.checks[c];
+      if(Array.isArray(data.snapshots)) setSnapshots(data.snapshots);
+      if(Array.isArray(data.cities)){ cities = data.cities; persistCities(); renderCities(); }
+      if(Array.isArray(data.minigames)){ minigames = data.minigames; persistMinigames(); renderMinigames(); }
+      if(data.settings){ SETTINGS = normalizeSettings(data.settings); saveSettings(); applySettings(); renderSettingsPanel(); }
+      calc();
+      alert(T("import_ok", data.snapshots?.length||0, data.cities?.length||0, data.minigames?.length||0));
+    }catch(e){ alert(T("import_fail")+e.message); }
+  };
+  reader.readAsText(file);
+  input.value = "";
+}
+
+/* ====== Init ====== */
+// Einmalige Korrektur: früherer Standard war USA – neuer Standard ist Deutschland/Frankreich.
+// Wer danach bewusst USA wählt, behält es (Flag verhindert erneutes Umstellen).
+if(localStorage.getItem(LS_PREFIX+"country")==="USA" && !localStorage.getItem(LS_PREFIX+"countryFix")){
+  localStorage.setItem(LS_PREFIX+"country","FRA");
+}
+localStorage.setItem(LS_PREFIX+"countryFix","1");
+loadAll();
+for(const id of [...FIELDS, ...CHECKS]){
+  document.getElementById(id).addEventListener("input", calc);
+  document.getElementById(id).addEventListener("change", calc);
+}
+// Heutiges Datum als Vorgabe für neue Minispiel-Einträge
+document.getElementById("mgDate").value = new Date().toISOString().slice(0,10);
+// Hover-Tooltip im Diagramm
+document.getElementById("chart").addEventListener("mousemove", chartHover);
+document.getElementById("chart").addEventListener("mouseleave", chartLeave);
+// Einstellungen: Eingaben verdrahten
+document.getElementById("setName").addEventListener("input", e=>{
+  SETTINGS.name = e.target.value.trim(); saveSettings();
+  document.getElementById("playerName").textContent = SETTINGS.name ? "– "+SETTINGS.name : "";
+});
+document.getElementById("setTheme").addEventListener("change", e=>{
+  SETTINGS.theme = e.target.value;
+  SETTINGS.accent = ""; SETTINGS.accent2 = ""; // Theme-Wechsel setzt eigene Akzentfarben zurück
+  saveSettings(); applySettings(); renderSettingsPanel();
+});
+document.getElementById("setAccent").addEventListener("input", e=>{
+  SETTINGS.accent = e.target.value; saveSettings(); applySettings();
+});
+document.getElementById("setAccent2").addEventListener("input", e=>{
+  SETTINGS.accent2 = e.target.value; saveSettings(); applySettings();
+});
+document.getElementById("setFont").addEventListener("change", e=>{
+  SETTINGS.fontSize = e.target.value; saveSettings(); applySettings();
+});
+document.getElementById("newGame").addEventListener("keydown", e=>{
+  if(e.key==="Enter") addCustomGame();
+});
+// Hilfe-Modus wiederherstellen (vor applyLang, damit der Button-Text stimmt)
+if(localStorage.getItem(LS_PREFIX+"showHelp")==="true") document.body.classList.add("show-help");
+// Einstellungen anwenden (Theme, Layout, Spiele), dann Sprache – ruft calc() + alle Renderer auf
+applySettings();
+applyLang();
+</script>
+</body>
+</html>

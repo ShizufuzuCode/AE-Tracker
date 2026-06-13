@@ -1,0 +1,14 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/
+
+# Lokale Daten / Backups (nicht versionieren)
+atlas-earth-stats-*.json
+
+# Scratch
+/tmp/
+*.log
