@@ -456,8 +456,13 @@
 <script>
 "use strict";
 /* ====== Version & Changelog ====== */
-const VERSION = "0.4.3";
+const VERSION = "0.4.4";
 const CHANGELOG = [
+  { v: "0.4.4", de: [
+      "Updates kommen auf dem Handy und in der installierten App jetzt zuverlässig an (Service Worker lädt online immer die aktuelle Version, offline weiterhin nutzbar)"
+    ], en: [
+      "Updates now reliably reach mobile and the installed app (service worker always loads the current version when online, still works offline)"
+    ] },
   { v: "0.4.3", de: [
       "Kleinere Änderungen"
     ], en: [
@@ -550,7 +555,7 @@ const CHANGELOG = [
     ] }
 ];
 
-/* ====== Konstanten (1:1 aus atlasearthcalculator.com, atlasScripts.js) ====== */
+/* ====== Konstanten ====== */
 const RATES = { common: .00000000111, rare: .00000000159, epic: .00000000222, legendary: .00000000444 };
 const AVG_RATE = .5*RATES.common + .3*RATES.rare + .15*RATES.epic + .05*RATES.legendary;
 const PARCEL_COST_AB = 100, BADGE_COST_AB = 200;
@@ -1583,7 +1588,7 @@ function renderMinigames(){
 }
 
 /* ====== Ausgaben (Echtgeld) ====== */
-// Referenz-AB je Kaufmöglichkeit (Stand atlasearthcalculator.com).
+// Referenz-AB je Kaufmöglichkeit.
 // Format pro Zeile: { k: i18n-Label, items: [[USD-Preis, AB], ...], notes?: [Label je Eintrag] }
 const AB_REF = {
   catAB: [
