@@ -9,7 +9,7 @@ A free, single-file tracker for the mobile game **Atlas Earth**. Download one HT
 ## Features
 
 - **Parcels** — track your parcels by rarity (Common / Rare / Epic / Legendary) with count- and rent-share statistics, matching the well-known online calculator.
-- **Earnings calculator** — from $/second to $/year, with and without boost. Uses the exact same rates and formulas as `atlasearthcalculator.com`.
+- **Earnings calculator** — from $/second to $/year, with and without boost.
 - **Boost overview** — ad boost by country (Germany preset), badge boost, Super Rent Boost.
 - **Breakeven view** — shows from how many parcels your boost drops and when buying pays off again, including a "dry stretch" warning and a full tier table.
 - **Cities & mayor** — track which cities you own parcels in. Log mayor AB with a `+1` button (20 AB) and a dated history, with statistics for the last 30 / 90 / 365 days and all-time.
@@ -38,7 +38,7 @@ You can wipe all tracker data via **Settings → Delete all data**.
 
 ## Disclaimer
 
-This is an unofficial fan-made tool and is **not affiliated with Atlas Reality, Inc.** or the Atlas Earth app. Rates and formulas are derived from the community calculator at `atlasearthcalculator.com` and may not perfectly reflect in-game values. No real-money value is implied; "AB" (Atlas Bucks) is the in-game currency.
+This is an unofficial fan-made tool and is **not affiliated with Atlas Reality, Inc.** or the Atlas Earth app. Rates and formulas may not perfectly reflect in-game values. No real-money value is implied; "AB" (Atlas Bucks) is the in-game currency.
 
 ## License
 
