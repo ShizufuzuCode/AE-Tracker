@@ -116,15 +116,31 @@
   #changelog details{margin-bottom:6px}
   #changelog summary{cursor:pointer;color:var(--text);font-weight:600}
   #changelog ul{margin:6px 0 4px 18px;padding:0;color:var(--muted);line-height:1.55}
+  /* Tab-Leiste (nur Handy) */
+  .tabbar{display:none}
   @media (max-width:640px){
-    body{padding:14px 12px;padding-top:max(14px,env(safe-area-inset-top))}
+    html,body{overflow-x:hidden;max-width:100%}
+    body{padding:14px 12px 76px;padding-top:max(14px,env(safe-area-inset-top))}
     .grid{grid-template-columns:1fr;gap:14px}
-    .card{padding:14px}
-    .setgrid{gap:18px}
+    .card{padding:14px;max-width:100%}
+    .setgrid{grid-template-columns:1fr;gap:18px}
+    .help .tip{width:min(300px,82vw)}
+    .row .help .tip,.stat .help .tip{left:auto;right:0}
     /* breite Tabellen horizontal scrollbar machen statt überlaufen */
     table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
     .topbar{margin-bottom:16px}
     h1{font-size:1.15rem}
+    .tabbar{
+      display:flex; position:fixed; left:0; right:0; bottom:0; z-index:50;
+      background:var(--panel); border-top:1px solid var(--border);
+      padding-bottom:env(safe-area-inset-bottom);
+    }
+    .tabbar button{
+      flex:1; background:transparent; border:none; border-radius:0; color:var(--muted);
+      font-size:.7rem; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+      padding:11px 4px 13px; cursor:pointer; transition:color .12s, box-shadow .12s;
+    }
+    .tabbar button.active{ color:var(--accent); box-shadow:inset 0 2px 0 var(--accent); }
   }
 </style>
 </head>
@@ -442,6 +458,13 @@
 
 </div>
 
+<nav class="tabbar" id="tabbar">
+  <button data-tab="input" data-i="tab_input" onclick="setTab('input')"></button>
+  <button data-tab="yield" data-i="tab_yield" onclick="setTab('yield')"></button>
+  <button data-tab="track" data-i="tab_track" onclick="setTab('track')"></button>
+  <button data-tab="hist" data-i="tab_hist" onclick="setTab('hist')"></button>
+</nav>
+
 <div id="modalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center;padding:16px">
   <div style="background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;max-width:480px;width:100%">
     <div id="modalMsg" style="margin-bottom:16px;line-height:1.55;font-size:.92rem"></div>
@@ -456,12 +479,17 @@
 <script>
 "use strict";
 /* ====== Version & Changelog ====== */
-const VERSION = "0.4.4";
+const VERSION = "0.5.0";
 const CHANGELOG = [
-  { v: "0.4.4", de: [
-      "Updates kommen auf dem Handy und in der installierten App jetzt zuverlässig an (Service Worker lädt online immer die aktuelle Version, offline weiterhin nutzbar)"
+  { v: "0.5.0", de: [
+      "Handy-Ansicht mit Tab-Leiste unten: Bereiche gruppiert in Eingabe / Ertrag / Tracking / Verlauf – übersichtlicher, weniger Scrollen (PC unverändert)"
     ], en: [
-      "Updates now reliably reach mobile and the installed app (service worker always loads the current version when online, still works offline)"
+      "Mobile view with bottom tab bar: sections grouped into Input / Earnings / Tracking / History – clearer, less scrolling (desktop unchanged)"
+    ] },
+  { v: "0.4.4", de: [
+      "Updates kommen auf dem Handy jetzt zuverlässig an (Service Worker lädt online immer die aktuelle Version, offline weiterhin nutzbar)"
+    ], en: [
+      "Updates now reliably reach mobile (service worker always loads the current version when online, still works offline)"
     ] },
   { v: "0.4.3", de: [
       "Kleinere Änderungen"
@@ -589,6 +617,7 @@ de: {
   title_page: "Atlas Earth – Account Tracker (lokal)",
   topSub: "Lokale Version – alle Daten bleiben in deinem Browser (localStorage). Inoffiziell, nicht mit Atlas Reality verbunden.",
   btnHelpOn: "Hilfe einblenden", btnHelpOff: "Hilfe ausblenden", btnLang: "🇬🇧 English", btnTrainer: "Reaktionstrainer",
+  tab_input: "Eingabe", tab_yield: "Ertrag", tab_track: "Tracking", tab_hist: "Verlauf",
   t_common: "Anzahl deiner <b>Common</b>-Parcels (graue, häufigste Sorte). Sie haben die niedrigste Grundmiete – alle anderen Seltenheiten werden daran gemessen.",
   t_rare: "Anzahl deiner <b>Rare</b>-Parcels (blau). Bringen ca. 1,43× so viel Miete wie ein Common.",
   t_epic: "Anzahl deiner <b>Epic</b>-Parcels (lila). Bringen 2× so viel Miete wie ein Common.",
@@ -819,6 +848,7 @@ en: {
   title_page: "Atlas Earth – Account Tracker (local)",
   topSub: "Local version – all data stays in your browser (localStorage). Unofficial, not affiliated with Atlas Reality.",
   btnHelpOn: "Show help", btnHelpOff: "Hide help", btnLang: "🇩🇪 Deutsch", btnTrainer: "Reaction trainer",
+  tab_input: "Input", tab_yield: "Earnings", tab_track: "Tracking", tab_hist: "History",
   t_common: "Number of your <b>Common</b> parcels (gray, most frequent type). They have the lowest base rent – all other rarities are measured against them.",
   t_rare: "Number of your <b>Rare</b> parcels (blue). Earn about 1.43× the rent of a Common.",
   t_epic: "Number of your <b>Epic</b> parcels (purple). Earn 2× the rent of a Common.",
@@ -1958,6 +1988,32 @@ try{ SETTINGS = normalizeSettings(JSON.parse(localStorage.getItem(LS_PREFIX+"set
 catch(e){ SETTINGS = normalizeSettings(null); }
 function saveSettings(){ localStorage.setItem(LS_PREFIX+"settings", JSON.stringify(SETTINGS)); }
 
+/* ====== Handy-Tabs: Bereiche gruppieren, nur eine Gruppe sichtbar ====== */
+const TAB_OF = {
+  parcels:'input', account:'input', boost:'input',
+  earnings:'yield', portfolio:'yield', breakeven:'yield',
+  cities:'track', minigames:'track', expenses:'track', finance:'track',
+  history:'hist'
+};
+let activeTab = localStorage.getItem(LS_PREFIX+"tab") || 'input';
+function isMobile(){ return window.matchMedia("(max-width:640px)").matches; }
+function refreshLayout(){
+  const mobile = isMobile();
+  document.querySelectorAll("[data-sec]").forEach(el=>{
+    const k = el.dataset.sec;
+    el.style.order = SETTINGS.order.indexOf(k);
+    if(SETTINGS.hidden.includes(k)){ el.style.display = "none"; return; }
+    el.style.display = (mobile && TAB_OF[k] && TAB_OF[k] !== activeTab) ? "none" : "";
+  });
+  document.querySelectorAll("#tabbar button").forEach(b => b.classList.toggle("active", b.dataset.tab === activeTab));
+}
+function setTab(t){
+  activeTab = t;
+  localStorage.setItem(LS_PREFIX+"tab", t);
+  refreshLayout();
+  window.scrollTo(0, 0);
+}
+
 function applySettings(){
   const root = document.documentElement;
   const th = THEMES[SETTINGS.theme];
@@ -1966,11 +2022,7 @@ function applySettings(){
   if(SETTINGS.accent2) root.style.setProperty("--accent2", SETTINGS.accent2);
   root.style.fontSize = { s:"87.5%", m:"100%", l:"115%" }[SETTINGS.fontSize] || "100%";
   document.getElementById("playerName").textContent = SETTINGS.name ? "– "+SETTINGS.name : "";
-  document.querySelectorAll("[data-sec]").forEach(el=>{
-    const k = el.dataset.sec;
-    el.style.order = SETTINGS.order.indexOf(k);
-    el.style.display = SETTINGS.hidden.includes(k) ? "none" : "";
-  });
+  refreshLayout();
   rebuildGameSelect();
   rebuildExpenseSelect();
   renderExpenses(); // Währungswechsel sofort übernehmen
@@ -2237,6 +2289,7 @@ if(localStorage.getItem(LS_PREFIX+"showHelp")==="true") document.body.classList.
 // Einstellungen anwenden (Theme, Layout, Spiele), dann Sprache – ruft calc() + alle Renderer auf
 applySettings();
 applyLang();
+window.addEventListener("resize", refreshLayout); // Handy/PC-Wechsel berücksichtigen
 // Service Worker registrieren (nur über http/https; auf file:// inaktiv) – macht die App offline-/installierbar
 if("serviceWorker" in navigator && location.protocol.startsWith("http")){
   window.addEventListener("load", ()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
