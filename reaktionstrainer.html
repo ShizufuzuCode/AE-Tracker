@@ -27,7 +27,9 @@
     --text: #e6e8ec;
     --muted: #878e99;
   }
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+      -webkit-touch-callout: none; }
   html, body {
     margin: 0; padding: 0; height: 100%;
     background: var(--bg); color: var(--text);
@@ -98,6 +100,7 @@
     width: 100%; padding: 22px; font-size: 26px; font-weight: 800; letter-spacing: 2px;
     color: #1c1503; background: var(--accent); border: none; border-radius: 14px;
     box-shadow: 0 5px 0 var(--accent-shadow); cursor: pointer; position: relative; overflow: hidden;
+    touch-action: manipulation;
   }
   #bowl:active,
   #bowl.pressed { transform: translateY(3px); box-shadow: 0 2px 0 var(--accent-shadow); }
@@ -111,7 +114,7 @@
   #startBtn {
     width: 100%; padding: 22px; font-size: 22px; font-weight: 800;
     color: #1c1503; background: var(--accent-bright); border: none; border-radius: 14px;
-    cursor: pointer; box-shadow: 0 5px 0 var(--accent-shadow);
+    cursor: pointer; box-shadow: 0 5px 0 var(--accent-shadow); touch-action: manipulation;
   }
   #startBtn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--accent-shadow); }
 
