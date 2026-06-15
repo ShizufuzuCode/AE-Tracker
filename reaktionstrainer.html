@@ -99,7 +99,8 @@
     color: #1c1503; background: var(--accent); border: none; border-radius: 14px;
     box-shadow: 0 5px 0 var(--accent-shadow); cursor: pointer; position: relative; overflow: hidden;
   }
-  #bowl:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--accent-shadow); }
+  #bowl:active,
+  #bowl.pressed { transform: translateY(3px); box-shadow: 0 2px 0 var(--accent-shadow); }
   #bowl:disabled { filter: grayscale(0.5) brightness(0.7); cursor: default; }
   #bowl .cooldown-fill {
     position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
@@ -207,16 +208,18 @@
   const TR = {
     de: { title:'Reaktionstrainer',
       sub:'Triff die <b style="color:var(--bar-green)">grüne</b> Mitte. Desktop: Leertaste · Handy: tippen',
-      hud:['Zeit','Würfe','Punkte','Best'], settings:'Trainings-Einstellungen',
+      hud:['Zeit','Hits','Punkte','Best'], settings:'Trainings-Einstellungen',
       labels:['Start-Tempo (langsam)','Max-Tempo (schnell)','Max-Tempo ab Schlag','Cooldown','Max. Trainingszeit','Grün-Breite'],
       start:'START', again:'NOCHMAL', perCycle:'s/Durchlauf', hitWord:'Schlag',
-      rThrows:'Würfe', rStrikes:'Strikes (grün)', rRate:'Grün-Quote', rPoints:'Punkte' },
+      rThrows:'Hits', rPoints:'Punkte',
+      rGreen:'Perfekt (grün)', rOrange:'Okay (orange)', rRed:'Bad (rot)', rGray:'WTF (grau)' },
     en: { title:'Reaction trainer',
       sub:'Hit the <b style="color:var(--bar-green)">green</b> center. Desktop: spacebar · Mobile: tap',
-      hud:['Time','Throws','Points','Best'], settings:'Training settings',
+      hud:['Time','Hits','Points','Best'], settings:'Training settings',
       labels:['Start speed (slow)','Max speed (fast)','Max speed from hit','Cooldown','Max session time','Green width'],
       start:'START', again:'AGAIN', perCycle:'s/cycle', hitWord:'Hit',
-      rThrows:'Throws', rStrikes:'Strikes (green)', rRate:'Green rate', rPoints:'Points' }
+      rThrows:'Hits', rPoints:'Points',
+      rGreen:'Perfect (green)', rOrange:'Okay (orange)', rRed:'Bad (red)', rGray:'WTF (gray)' }
   };
   const L = TR[LANG];
 
@@ -268,7 +271,7 @@
   let state = 'idle';
   let startTime = 0;
   let lastThrowTime = -1e9;
-  let score = 0, throwCount = 0, greenHits = 0;
+  let score = 0, throwCount = 0, zoneCounts = { green:0, orange:0, red:0, gray:0 };
   let phase = 0, lastTick = 0, curFrac = 0;
   let best = +(localStorage.getItem('atlasBowlBest') || 0);
   hud.best.textContent = best;
@@ -292,15 +295,10 @@
       curFrac = triOf(phase);
       pointer.style.left = (curFrac * 100) + '%';
 
+      // Cooldown nur visuell anzeigen – Button bleibt drückbar (Vorspannen erlaubt).
       const cd = +S.cooldown.range.value;
       const since = now - lastThrowTime;
-      if (cd > 0 && since < cd) {
-        cdFill.style.width = (100 * (1 - since / cd)) + '%';
-        bowlBtn.disabled = true;
-      } else {
-        cdFill.style.width = '0%';
-        bowlBtn.disabled = false;
-      }
+      cdFill.style.width = (cd > 0 && since < cd) ? (100 * (1 - since / cd)) + '%' : '0%';
 
       const sessionMs = (+S.session.range.value) * 1000;
       const remain = Math.max(0, sessionMs - (now - startTime));
@@ -320,7 +318,7 @@
     const name = zoneAt(frac);
     const pts = ZONE_POINTS[name];
     score += pts; throwCount++;
-    if (name === 'green') greenHits++;
+    zoneCounts[name]++;
     lastThrowTime = now;
 
     lastmark.style.left = (frac * 100) + '%';
@@ -334,7 +332,7 @@
 
   function start() {
     state = 'running';
-    score = 0; throwCount = 0; greenHits = 0; lastThrowTime = -1e9;
+    score = 0; throwCount = 0; zoneCounts = { green:0, orange:0, red:0, gray:0 }; lastThrowTime = -1e9;
     phase = 0; startTime = performance.now(); lastTick = startTime;
     hud.throws.textContent = '0'; hud.score.textContent = '0';
     feedback.textContent = ''; feedback.className = '';
@@ -342,6 +340,8 @@
     results.classList.add('hidden');
     startBtn.classList.add('hidden');
     bowlBtn.classList.remove('hidden');
+    bowlBtn.disabled = false;
+    bowlBtn.classList.remove('pressed');
   }
 
   function finish() {
@@ -351,26 +351,47 @@
     startBtn.textContent = L.again;
     hud.time.textContent = '0.0';
     if (score > best) { best = score; localStorage.setItem('atlasBowlBest', best); hud.best.textContent = best; }
-    const acc = throwCount ? Math.round(100 * greenHits / throwCount) : 0;
     results.innerHTML =
       '<table>' +
       '<tr><td class="k">' + L.rThrows + '</td><td class="v">' + throwCount + '</td></tr>' +
-      '<tr><td class="k">' + L.rStrikes + '</td><td class="v">' + greenHits + '</td></tr>' +
-      '<tr><td class="k">' + L.rRate + '</td><td class="v">' + acc + '%</td></tr>' +
+      '<tr><td class="k" style="color:var(--bar-green)">'  + L.rGreen  + '</td><td class="v">' + zoneCounts.green  + '</td></tr>' +
+      '<tr><td class="k" style="color:var(--bar-orange)">' + L.rOrange + '</td><td class="v">' + zoneCounts.orange + '</td></tr>' +
+      '<tr><td class="k" style="color:var(--bar-red)">'    + L.rRed    + '</td><td class="v">' + zoneCounts.red    + '</td></tr>' +
+      '<tr><td class="k" style="color:var(--bar-gray)">'   + L.rGray   + '</td><td class="v">' + zoneCounts.gray   + '</td></tr>' +
       '<tr><td class="k">' + L.rPoints + '</td><td class="v">' + score + '</td></tr>' +
       '</table>';
     results.classList.remove('hidden');
   }
 
-  bowlBtn.addEventListener('click', doBowl);
-  startBtn.addEventListener('click', start);
-  document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-      e.preventDefault();
-      if (state === 'running') doBowl(); else start();
-    }
+  // Treffer wird beim LOSLASSEN ausgelöst. Drücken (auch während Cooldown) spannt nur vor.
+  bowlBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    try { bowlBtn.setPointerCapture(e.pointerId); } catch (_) {}
+    bowlBtn.classList.add('pressed');
   });
-  bowlBtn.addEventListener('touchstart', (e) => { e.preventDefault(); doBowl(); }, { passive: false });
+  bowlBtn.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    bowlBtn.classList.remove('pressed');
+    if (state === 'running') doBowl();   // doBowl no-opt während Cooldown
+  });
+  bowlBtn.addEventListener('pointercancel', () => bowlBtn.classList.remove('pressed'));
+
+  startBtn.addEventListener('click', start);
+
+  let suppressKeyHit = false;   // Start per Leertaste nicht als Treffer beim Loslassen werten
+  document.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space' || e.repeat) return;
+    e.preventDefault();
+    if (state === 'running') { bowlBtn.classList.add('pressed'); }
+    else { start(); suppressKeyHit = true; }
+  });
+  document.addEventListener('keyup', (e) => {
+    if (e.code !== 'Space') return;
+    e.preventDefault();
+    bowlBtn.classList.remove('pressed');
+    if (suppressKeyHit) { suppressKeyHit = false; return; }
+    if (state === 'running') doBowl();
+  });
 
   // Statische Texte übersetzen
   function applyI18n() {
