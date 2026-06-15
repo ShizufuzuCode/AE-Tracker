@@ -136,6 +136,7 @@
     <div class="sub" data-i="topSub"></div>
   </div>
   <div class="topbtns">
+    <button class="secondary" onclick="location.href='reaktionstrainer.html'" data-i="btnTrainer"></button>
     <button class="secondary" onclick="toggleSettings()" data-i="btnSettings"></button>
     <button class="secondary" id="langToggle" onclick="toggleLang()">🇬🇧 English</button>
     <button class="secondary" id="helpToggle" onclick="toggleHelp()"></button>
@@ -455,8 +456,15 @@
 <script>
 "use strict";
 /* ====== Version & Changelog ====== */
-const VERSION = "0.3.1";
+const VERSION = "0.4.0";
 const CHANGELOG = [
+  { v: "0.4.0", de: [
+      "Neu: Reaktionstrainer – Mini-Spiel zum Timing-Training, oben über den Button „Reaktionstrainer“ erreichbar",
+      "Trainer im einheitlichen Design (gleiche Farben, ohne Emoji), offline & auf dem Handy nutzbar"
+    ], en: [
+      "New: reaction trainer – mini game for timing practice, reachable via the “Reaction trainer” button at the top",
+      "Trainer in the unified design (same colors, no emoji), works offline & on mobile"
+    ] },
   { v: "0.3.1", de: [
       "Neues, reduziertes Design: Gold-Akzent auf Fast-Schwarz, ruhige Typografie, keine Emoji in den Überschriften",
       "Als App installierbar (PWA): offline lauffähig, „Zum Home-Bildschirm“ auf iPhone & Android",
@@ -560,7 +568,7 @@ const I18N = {
 de: {
   title_page: "Atlas Earth – Account Tracker (lokal)",
   topSub: "Lokale Version – alle Daten bleiben in deinem Browser (localStorage). Raten &amp; Formeln entsprechen atlasearthcalculator.com (Stand 13.06.2026). Inoffiziell, nicht mit Atlas Reality verbunden.",
-  btnHelpOn: "Hilfe einblenden", btnHelpOff: "Hilfe ausblenden", btnLang: "🇬🇧 English",
+  btnHelpOn: "Hilfe einblenden", btnHelpOff: "Hilfe ausblenden", btnLang: "🇬🇧 English", btnTrainer: "Reaktionstrainer",
   t_common: "Anzahl deiner <b>Common</b>-Parcels (graue, häufigste Sorte). Sie haben die niedrigste Grundmiete – alle anderen Seltenheiten werden daran gemessen.",
   t_rare: "Anzahl deiner <b>Rare</b>-Parcels (blau). Bringen ca. 1,43× so viel Miete wie ein Common.",
   t_epic: "Anzahl deiner <b>Epic</b>-Parcels (lila). Bringen 2× so viel Miete wie ein Common.",
@@ -790,7 +798,7 @@ de: {
 en: {
   title_page: "Atlas Earth – Account Tracker (local)",
   topSub: "Local version – all data stays in your browser (localStorage). Rates &amp; formulas match atlasearthcalculator.com (as of 2026-06-13). Unofficial, not affiliated with Atlas Reality.",
-  btnHelpOn: "Show help", btnHelpOff: "Hide help", btnLang: "🇩🇪 Deutsch",
+  btnHelpOn: "Show help", btnHelpOff: "Hide help", btnLang: "🇩🇪 Deutsch", btnTrainer: "Reaction trainer",
   t_common: "Number of your <b>Common</b> parcels (gray, most frequent type). They have the lowest base rent – all other rarities are measured against them.",
   t_rare: "Number of your <b>Rare</b> parcels (blue). Earn about 1.43× the rent of a Common.",
   t_epic: "Number of your <b>Epic</b> parcels (purple). Earn 2× the rent of a Common.",

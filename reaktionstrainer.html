@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Reaktionstrainer – Atlas Earth Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0c0d10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
+<style>
+  :root {
+    --bg: #0c0d10;
+    --panel: #15171c;
+    --panel2: #1d2026;
+    --border: #2a2e36;
+    --accent: #e0b24c;
+    --accent-bright: #e7c163;
+    --accent-shadow: #8a6d1f;
+    --bar-gray: #9098a0;
+    --bar-red: #ef4a25;
+    --bar-orange: #ff9f1c;
+    --bar-green: #50ce3a;
+    --text: #e6e8ec;
+    --muted: #878e99;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--text);
+    font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden; user-select: none; -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    max-width: 520px; margin: 0 auto; height: 100%;
+    display: flex; flex-direction: column; padding: 12px;
+  }
+  .topnav { display: flex; align-items: center; min-height: 26px; }
+  .topnav a {
+    color: var(--muted); text-decoration: none; font-size: 13px;
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; transition: border-color .12s, color .12s;
+  }
+  .topnav a:hover { border-color: var(--accent); color: var(--accent); }
+  header { text-align: center; padding: 6px 0 10px; }
+  header h1 { font-size: .78rem; margin: 0; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  header .sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* HUD */
+  .hud {
+    display: flex; justify-content: space-around; align-items: center;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 10px;
+  }
+  .hud .stat { text-align: center; flex: 1; }
+  .hud .stat .v { font-size: 24px; font-weight: 700; }
+  .hud .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  .play-area { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px; }
+
+  /* Feedback line */
+  #feedback { text-align: center; height: 40px; font-size: 26px; font-weight: 800; }
+  #feedback.green  { color: var(--bar-green); }
+  #feedback.orange { color: var(--bar-orange); }
+  #feedback.red    { color: var(--bar-red); }
+  #feedback.gray   { color: var(--bar-gray); }
+
+  /* Timing bar */
+  .bar-wrap { position: relative; padding: 14px 6px; }
+  .bar {
+    position: relative; height: 46px; border-radius: 10px; overflow: hidden;
+    display: flex; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.06);
+  }
+  .bar .seg { height: 100%; }
+  .pointer {
+    position: absolute; top: -6px; bottom: -6px; width: 4px; left: 0;
+    background: var(--accent); transform: translateX(-50%);
+    box-shadow: 0 0 8px var(--accent); border-radius: 2px;
+  }
+  .pointer::before, .pointer::after {
+    content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+    border-left: 8px solid transparent; border-right: 8px solid transparent;
+  }
+  .pointer::before { top: -12px; border-top: 12px solid var(--accent); }
+  .pointer::after  { bottom: -12px; border-bottom: 12px solid var(--accent); }
+
+  /* Markierung des letzten Treffers (schattenartig stehenbleibend) */
+  .lastmark {
+    position: absolute; top: 14px; bottom: 14px; width: 5px; left: 0;
+    background: rgba(255,255,255,0.92); transform: translateX(-50%);
+    border-radius: 2px; pointer-events: none; z-index: 2;
+    box-shadow: 0 0 0 1.5px rgba(0,0,0,0.55), 0 0 6px rgba(0,0,0,0.4);
+  }
+
+  /* HIT button */
+  #bowl {
+    width: 100%; padding: 22px; font-size: 26px; font-weight: 800; letter-spacing: 2px;
+    color: #1c1503; background: var(--accent); border: none; border-radius: 14px;
+    box-shadow: 0 5px 0 var(--accent-shadow); cursor: pointer; position: relative; overflow: hidden;
+  }
+  #bowl:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--accent-shadow); }
+  #bowl:disabled { filter: grayscale(0.5) brightness(0.7); cursor: default; }
+  #bowl .cooldown-fill {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 0%;
+    background: rgba(0,0,0,0.35); pointer-events: none;
+  }
+  #bowl .label { position: relative; z-index: 1; }
+
+  #startBtn {
+    width: 100%; padding: 22px; font-size: 22px; font-weight: 800;
+    color: #1c1503; background: var(--accent-bright); border: none; border-radius: 14px;
+    cursor: pointer; box-shadow: 0 5px 0 var(--accent-shadow);
+  }
+  #startBtn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--accent-shadow); }
+
+  /* Settings */
+  details.settings { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; padding: 4px 12px; }
+  details.settings summary { cursor: pointer; padding: 8px 0; font-size: 13px; color: var(--muted); }
+  .ctrl { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13px; }
+  .ctrl label { flex: 0 0 120px; color: var(--muted); }
+  .ctrl input[type=range] { flex: 1; accent-color: var(--accent); }
+  .ctrl .val { flex: 0 0 64px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .results { text-align: center; }
+  .results table { margin: 8px auto; border-collapse: collapse; font-size: 14px; }
+  .results td { padding: 3px 12px; }
+  .results td.k { color: var(--muted); text-align: right; }
+  .results td.v { text-align: left; font-weight: 700; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topnav"><a href="AtlasEarthTracker.html">← Calculator</a></div>
+  <header>
+    <h1>Reaktionstrainer</h1>
+    <div class="sub">Triff die <b style="color:var(--bar-green)">grüne</b> Mitte. Desktop: Leertaste · Handy: tippen</div>
+  </header>
+
+  <div class="hud">
+    <div class="stat"><div class="v" id="hudTime">–</div><div class="l">Zeit</div></div>
+    <div class="stat"><div class="v" id="hudThrows">0</div><div class="l">Würfe</div></div>
+    <div class="stat"><div class="v" id="hudScore">0</div><div class="l">Punkte</div></div>
+    <div class="stat"><div class="v" id="hudBest">0</div><div class="l">Best</div></div>
+  </div>
+
+  <div class="play-area">
+    <div id="feedback"></div>
+
+    <div class="bar-wrap">
+      <div class="bar" id="bar"></div>
+      <div class="lastmark hidden" id="lastmark"></div>
+      <div class="pointer" id="pointer"></div>
+    </div>
+
+    <div id="results" class="results hidden"></div>
+
+    <button id="startBtn">START</button>
+    <button id="bowl" class="hidden" disabled>
+      <span class="cooldown-fill" id="cdFill"></span>
+      <span class="label">HIT</span>
+    </button>
+  </div>
+
+  <details class="settings" open>
+    <summary>Trainings-Einstellungen</summary>
+    <div class="ctrl">
+      <label>Start-Tempo (langsam)</label>
+      <input type="range" id="sStart" min="800" max="2500" step="50" value="1600">
+      <span class="val" id="vStart"></span>
+    </div>
+    <div class="ctrl">
+      <label>Max-Tempo (schnell)</label>
+      <input type="range" id="sMax" min="350" max="1500" step="25" value="700">
+      <span class="val" id="vMax"></span>
+    </div>
+    <div class="ctrl">
+      <label>Max-Tempo ab Schlag</label>
+      <input type="range" id="sRamp" min="1" max="20" step="1" value="8">
+      <span class="val" id="vRamp"></span>
+    </div>
+    <div class="ctrl">
+      <label>Cooldown</label>
+      <input type="range" id="sCooldown" min="0" max="8000" step="100" value="4000">
+      <span class="val" id="vCooldown"></span>
+    </div>
+    <div class="ctrl">
+      <label>Max. Trainingszeit</label>
+      <input type="range" id="sSession" min="10" max="180" step="5" value="60">
+      <span class="val" id="vSession"></span>
+    </div>
+    <div class="ctrl">
+      <label>Grün-Breite</label>
+      <input type="range" id="sGreen" min="2" max="30" step="1" value="6">
+      <span class="val" id="vGreen"></span>
+    </div>
+  </details>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // Sprache aus dem Calculator übernehmen (gleicher localStorage-Key)
+  const LANG = (localStorage.getItem('aet_lang') === 'en') ? 'en' : 'de';
+  const TR = {
+    de: { title:'Reaktionstrainer',
+      sub:'Triff die <b style="color:var(--bar-green)">grüne</b> Mitte. Desktop: Leertaste · Handy: tippen',
+      hud:['Zeit','Würfe','Punkte','Best'], settings:'Trainings-Einstellungen',
+      labels:['Start-Tempo (langsam)','Max-Tempo (schnell)','Max-Tempo ab Schlag','Cooldown','Max. Trainingszeit','Grün-Breite'],
+      start:'START', again:'NOCHMAL', perCycle:'s/Durchlauf', hitWord:'Schlag',
+      rThrows:'Würfe', rStrikes:'Strikes (grün)', rRate:'Grün-Quote', rPoints:'Punkte' },
+    en: { title:'Reaction trainer',
+      sub:'Hit the <b style="color:var(--bar-green)">green</b> center. Desktop: spacebar · Mobile: tap',
+      hud:['Time','Throws','Points','Best'], settings:'Training settings',
+      labels:['Start speed (slow)','Max speed (fast)','Max speed from hit','Cooldown','Max session time','Green width'],
+      start:'START', again:'AGAIN', perCycle:'s/cycle', hitWord:'Hit',
+      rThrows:'Throws', rStrikes:'Strikes (green)', rRate:'Green rate', rPoints:'Points' }
+  };
+  const L = TR[LANG];
+
+  // --- Zonen (symmetrisch, Anteile werden aus Grün-Breite abgeleitet) ---
+  const ZONE_POINTS = { green: 4, orange: 2, red: 1, gray: 0 };
+  const ZONE_TEXT   = { green: "Perfect", orange: "OKAY", red: "BAD", gray: "WTF?" };
+
+  const el = (id) => document.getElementById(id);
+  const bar = el('bar'), pointer = el('pointer'), feedback = el('feedback');
+  const bowlBtn = el('bowl'), startBtn = el('startBtn'), cdFill = el('cdFill');
+  const lastmark = el('lastmark');
+  const results = el('results');
+  const hud = { time: el('hudTime'), throws: el('hudThrows'), score: el('hudScore'), best: el('hudBest') };
+
+  const S = {
+    start:    { range: el('sStart'),    out: el('vStart'),    fmt: v => (v/1000).toFixed(2)+' '+L.perCycle },
+    max:      { range: el('sMax'),      out: el('vMax'),      fmt: v => (v/1000).toFixed(2)+' '+L.perCycle },
+    ramp:     { range: el('sRamp'),     out: el('vRamp'),     fmt: v => L.hitWord+' ' + v },
+    cooldown: { range: el('sCooldown'), out: el('vCooldown'), fmt: v => (v/1000).toFixed(1)+' s' },
+    session:  { range: el('sSession'),  out: el('vSession'),  fmt: v => v+' s' },
+    green:    { range: el('sGreen'),    out: el('vGreen'),    fmt: v => v+' %' },
+  };
+
+  let zones = [];
+  function rebuildZones() {
+    const g = (+S.green.range.value) / 100;
+    const half = (1 - g) / 2;
+    const gry = half * 0.16, red = half * 0.53, org = half * 0.31;
+    let x = 0; zones = [];
+    const push = (w, name) => { zones.push({ from: x, to: x + w, name }); x += w; };
+    push(gry, 'gray'); push(red, 'red'); push(org, 'orange');
+    push(g, 'green');
+    push(org, 'orange'); push(red, 'red'); push(gry, 'gray');
+    renderBar();
+  }
+  function colorOf(name){ return getComputedStyle(document.documentElement).getPropertyValue('--bar-'+name); }
+  function renderBar() {
+    bar.innerHTML = '';
+    for (const z of zones) {
+      const d = document.createElement('div');
+      d.className = 'seg';
+      d.style.width = ((z.to - z.from) * 100) + '%';
+      d.style.background = colorOf(z.name);
+      bar.appendChild(d);
+    }
+  }
+  function zoneAt(frac){ for (const z of zones) if (frac >= z.from && frac < z.to) return z.name; return 'gray'; }
+
+  let state = 'idle';
+  let startTime = 0;
+  let lastThrowTime = -1e9;
+  let score = 0, throwCount = 0, greenHits = 0;
+  let phase = 0, lastTick = 0, curFrac = 0;
+  let best = +(localStorage.getItem('atlasBowlBest') || 0);
+  hud.best.textContent = best;
+
+  function currentPeriod() {
+    const startP = +S.start.range.value;
+    const maxP   = +S.max.range.value;
+    const rampN  = +S.ramp.range.value;
+    const t = rampN > 0 ? Math.min(1, throwCount / rampN) : 1;
+    return startP + (maxP - startP) * t;
+  }
+  const triOf = (p) => (p < 0.5 ? p * 2 : 2 - p * 2);
+
+  function inCooldown(now){ return (now - lastThrowTime) < (+S.cooldown.range.value); }
+
+  function loop(now) {
+    if (state === 'running') {
+      const dt = Math.min(100, now - lastTick);
+      lastTick = now;
+      phase = (phase + dt / currentPeriod()) % 1;
+      curFrac = triOf(phase);
+      pointer.style.left = (curFrac * 100) + '%';
+
+      const cd = +S.cooldown.range.value;
+      const since = now - lastThrowTime;
+      if (cd > 0 && since < cd) {
+        cdFill.style.width = (100 * (1 - since / cd)) + '%';
+        bowlBtn.disabled = true;
+      } else {
+        cdFill.style.width = '0%';
+        bowlBtn.disabled = false;
+      }
+
+      const sessionMs = (+S.session.range.value) * 1000;
+      const remain = Math.max(0, sessionMs - (now - startTime));
+      hud.time.textContent = (remain / 1000).toFixed(1);
+      if (remain <= 0) { finish(); }
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function doBowl() {
+    if (state !== 'running') return;
+    const now = performance.now();
+    if (inCooldown(now)) return;
+
+    const frac = curFrac;
+    const name = zoneAt(frac);
+    const pts = ZONE_POINTS[name];
+    score += pts; throwCount++;
+    if (name === 'green') greenHits++;
+    lastThrowTime = now;
+
+    lastmark.style.left = (frac * 100) + '%';
+    lastmark.classList.remove('hidden');
+
+    hud.throws.textContent = throwCount;
+    hud.score.textContent = score;
+    feedback.textContent = ZONE_TEXT[name] + ' +' + pts;
+    feedback.className = name;
+  }
+
+  function start() {
+    state = 'running';
+    score = 0; throwCount = 0; greenHits = 0; lastThrowTime = -1e9;
+    phase = 0; startTime = performance.now(); lastTick = startTime;
+    hud.throws.textContent = '0'; hud.score.textContent = '0';
+    feedback.textContent = ''; feedback.className = '';
+    lastmark.classList.add('hidden');
+    results.classList.add('hidden');
+    startBtn.classList.add('hidden');
+    bowlBtn.classList.remove('hidden');
+  }
+
+  function finish() {
+    state = 'finished';
+    bowlBtn.classList.add('hidden');
+    startBtn.classList.remove('hidden');
+    startBtn.textContent = L.again;
+    hud.time.textContent = '0.0';
+    if (score > best) { best = score; localStorage.setItem('atlasBowlBest', best); hud.best.textContent = best; }
+    const acc = throwCount ? Math.round(100 * greenHits / throwCount) : 0;
+    results.innerHTML =
+      '<table>' +
+      '<tr><td class="k">' + L.rThrows + '</td><td class="v">' + throwCount + '</td></tr>' +
+      '<tr><td class="k">' + L.rStrikes + '</td><td class="v">' + greenHits + '</td></tr>' +
+      '<tr><td class="k">' + L.rRate + '</td><td class="v">' + acc + '%</td></tr>' +
+      '<tr><td class="k">' + L.rPoints + '</td><td class="v">' + score + '</td></tr>' +
+      '</table>';
+    results.classList.remove('hidden');
+  }
+
+  bowlBtn.addEventListener('click', doBowl);
+  startBtn.addEventListener('click', start);
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (state === 'running') doBowl(); else start();
+    }
+  });
+  bowlBtn.addEventListener('touchstart', (e) => { e.preventDefault(); doBowl(); }, { passive: false });
+
+  // Statische Texte übersetzen
+  function applyI18n() {
+    document.documentElement.lang = LANG;
+    document.querySelector('header h1').textContent = L.title;
+    document.querySelector('header .sub').innerHTML = L.sub;
+    document.querySelectorAll('.hud .l').forEach((e,i) => { e.textContent = L.hud[i]; });
+    document.querySelector('.settings summary').textContent = L.settings;
+    document.querySelectorAll('.ctrl label').forEach((e,i) => { e.textContent = L.labels[i]; });
+    startBtn.textContent = L.start;
+  }
+  applyI18n();
+
+  for (const k in S) {
+    const s = S[k];
+    const update = () => { s.out.textContent = s.fmt(+s.range.value); if (k === 'green') rebuildZones(); };
+    s.range.addEventListener('input', update);
+    update();
+  }
+  rebuildZones();
+  window.addEventListener('resize', renderBar);
+})();
+</script>
+</body>
+</html>

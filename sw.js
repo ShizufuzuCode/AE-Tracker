@@ -1,8 +1,8 @@
 // Service Worker für Atlas Earth Tracker (PWA, Offline-Cache).
 // WICHTIG: CACHE-Namen bei jedem Release mit der App-Version hochziehen,
 // damit Nutzer das Update bekommen (alte Caches werden beim activate gelöscht).
-const CACHE = 'ae-tracker-v0.3.1';
-const ASSETS = ['./', 'index.html', 'AtlasEarthTracker.html', 'manifest.json', 'icon.svg'];
+const CACHE = 'ae-tracker-v0.4.0';
+const ASSETS = ['./', 'index.html', 'AtlasEarthTracker.html', 'reaktionstrainer.html', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
