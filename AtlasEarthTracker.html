@@ -354,16 +354,18 @@
         <option>Vintage Fishing</option><option>Vintage Racer</option>
       </select>
       <input type="date" id="mgDate">
-      <input type="number" id="mgPlace" min="1" style="width:90px" data-ph="ph_place">
-      <input type="number" id="mgAB" min="0" placeholder="AB" style="width:90px">
+      <input type="number" id="mgPlace" min="1" style="width:80px" data-ph="ph_place">
+      <input type="number" id="mgPoints" min="0" style="width:90px" data-ph="ph_points">
+      <input type="number" id="mgAB" min="0" placeholder="AB" style="width:80px">
       <button onclick="addMinigame()" data-i="btn_addEntry"></button>
     </div>
     <table>
-      <thead><tr><th data-i="th_date"></th><th data-i="th_game"></th><th data-i="th_place"></th><th data-i="th_abGot"></th><th></th></tr></thead>
+      <thead><tr><th data-i="th_date"></th><th data-i="th_game"></th><th data-i="th_place"></th><th data-i="th_points"></th><th data-i="th_abGot"></th><th></th></tr></thead>
       <tbody id="mgBody"></tbody>
       <tfoot><tr style="font-weight:700">
         <td id="mgTotalCell"></td><td></td>
         <td id="mgAvgCell">–</td>
+        <td id="mgTotalPoints"></td>
         <td id="mgTotalAB">0 AB</td><td></td>
       </tr></tfoot>
     </table>
@@ -440,6 +442,7 @@
       <button onclick="saveSnapshot()" data-i="btn_snapshot"></button>
       <button class="secondary" onclick="exportData()">⬇ Export (JSON)</button>
       <button class="secondary" onclick="document.getElementById('importFile').click()">⬆ Import (JSON)</button>
+      <button class="secondary" onclick="copyShareCode()" data-i="btn_shareCode"></button>
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
     </div>
     <div class="legend" id="chartLegend"></div>
@@ -479,8 +482,15 @@
 <script>
 "use strict";
 /* ====== Version & Changelog ====== */
-const VERSION = "0.5.0";
+const VERSION = "0.6.0";
 const CHANGELOG = [
+  { v: "0.6.0", de: [
+      "Minispiele: erzielte Punkte je Eintrag erfassbar (eigene Spalte, Punkte-Summe, „beste Punkte“ je Spiel)",
+      "Neuer Button „Discord-Code“: erzeugt einen kompakten Code mit deinen Ranglisten-Werten für den Atlas-Earth-Discord-Bot (einreichen ohne riesiges JSON)"
+    ], en: [
+      "Mini games: record achieved points per entry (own column, points total, “best points” per game)",
+      "New “Discord code” button: generates a compact code with your leaderboard values for the Atlas Earth Discord bot (submit without the huge JSON)"
+    ] },
   { v: "0.5.0", de: [
       "Handy-Ansicht mit Tab-Leiste unten: Bereiche gruppiert in Eingabe / Ertrag / Tracking / Verlauf – übersichtlicher, weniger Scrollen (PC unverändert)"
     ], en: [
@@ -709,16 +719,19 @@ de: {
   confirm_delCity: "Stadt „{0}“ löschen?",
   h_minigames: "Minispiele",
   t_minigames: "Dein Minispiel-Logbuch: Spiel auswählen, Datum, Platzierung und erhaltene AB eintragen, dann <b>„+ Eintrag“</b>. Unten siehst du Gesamtzahl, Ø-Platzierung, AB-Summe und eine Statistik pro Spiel.",
-  ph_place: "Platz", btn_addEntry: "+ Eintrag",
-  th_date: "Datum", th_game: "Minispiel", th_place: "Platzierung", th_abGot: "Erhaltene AB",
+  ph_place: "Platz", ph_points: "Punkte", btn_addEntry: "+ Eintrag",
+  th_date: "Datum", th_game: "Minispiel", th_place: "Platzierung", th_points: "Punkte", th_abGot: "Erhaltene AB",
   mgTotal: "Gesamt: {0} Einträge", mgAvg: "Ø Platz {0}",
   mg_empty: "Noch keine Einträge – Spiel, Datum, Platzierung und AB oben eintragen.",
   alert_date: "Bitte ein Datum angeben.",
   alert_place: "Bitte eine Platzierung angeben (1 = Erster).",
-  mg_summary: "{0}: {1}× gespielt, Bester Platz {2}., {3} AB",
+  mg_summary: "{0}: {1}× gespielt, Bester Platz {2}., Beste Punkte {3}, {4} AB",
   h_snapshots: "Verlauf (Snapshots)",
   tip_storage: "<b>Wo werden meine Daten gespeichert?</b><br>Alle Eingaben und Snapshots liegen im <b>lokalen Speicher deines Browsers</b> (localStorage) – nicht in der HTML-Datei und nicht im Internet. Niemand außer dir hat Zugriff.<br><br><b>Das heißt:</b><br>• Daten bleiben beim Schließen und Neustarten erhalten.<br>• Sie sind nur in <b>diesem Browser auf diesem PC</b> sichtbar.<br>• Beim Löschen von „Cookies &amp; Websitedaten“ im Browser gehen sie <b>verloren</b>!<br><br><b>Tipp:</b> Regelmäßig „⬇ Export (JSON)“ klicken – das erstellt eine Backup-Datei, die du jederzeit per „⬆ Import“ wiederherstellen kannst (auch auf einem anderen PC).",
   btn_snapshot: "Snapshot speichern",
+  btn_shareCode: "Discord-Code",
+  share_copied: "Discord-Code in die Zwischenablage kopiert:\n\n{0}\n\nFüge ihn beim Bot mit /submit ein.",
+  share_manual: "Konnte nicht automatisch kopieren – hier ist dein Code (markieren & kopieren):",
   th_perDay: "$/Tag (Boost)",
   snap_hint: "Snapshots werden lokal gespeichert. Regelmäßig exportieren, falls der Browser-Speicher gelöscht wird!",
   snap_empty: "Noch keine Snapshots – Stats eingeben und „Snapshot speichern“ klicken.",
@@ -940,16 +953,19 @@ en: {
   confirm_delCity: "Delete city “{0}”?",
   h_minigames: "Mini games",
   t_minigames: "Your mini-game log: pick the game, enter date, placement and AB received, then <b>“+ Add entry”</b>. Below you see the total count, avg. placement, AB sum and per-game statistics.",
-  ph_place: "Rank", btn_addEntry: "+ Add entry",
-  th_date: "Date", th_game: "Mini game", th_place: "Placement", th_abGot: "AB received",
+  ph_place: "Rank", ph_points: "Points", btn_addEntry: "+ Add entry",
+  th_date: "Date", th_game: "Mini game", th_place: "Placement", th_points: "Points", th_abGot: "AB received",
   mgTotal: "Total: {0} entries", mgAvg: "Avg. rank {0}",
   mg_empty: "No entries yet – enter game, date, placement and AB above.",
   alert_date: "Please enter a date.",
   alert_place: "Please enter a placement (1 = first).",
-  mg_summary: "{0}: played {1}×, best rank {2}, {3} AB",
+  mg_summary: "{0}: played {1}×, best rank {2}, best points {3}, {4} AB",
   h_snapshots: "History (snapshots)",
   tip_storage: "<b>Where is my data stored?</b><br>All inputs and snapshots live in your <b>browser's local storage</b> (localStorage) – not in the HTML file and not on the internet. Nobody but you has access.<br><br><b>That means:</b><br>• Data survives closing and restarting.<br>• It is only visible in <b>this browser on this PC</b>.<br>• Clearing “cookies &amp; site data” in the browser <b>deletes</b> it!<br><br><b>Tip:</b> Click “⬇ Export (JSON)” regularly – it creates a backup file you can restore any time via “⬆ Import” (even on another PC).",
   btn_snapshot: "Save snapshot",
+  btn_shareCode: "Discord code",
+  share_copied: "Discord code copied to clipboard:\n\n{0}\n\nPaste it to the bot with /submit.",
+  share_manual: "Couldn't copy automatically – here is your code (select & copy):",
   th_perDay: "$/day (boost)",
   snap_hint: "Snapshots are stored locally. Export regularly in case the browser storage gets cleared!",
   snap_empty: "No snapshots yet – enter your stats and click “Save snapshot”.",
@@ -1565,11 +1581,13 @@ function addMinigame(){
   const game = document.getElementById("mgGame").value;
   const place = parseInt(document.getElementById("mgPlace").value,10);
   const ab = parseInt(document.getElementById("mgAB").value,10);
+  const points = parseInt(document.getElementById("mgPoints").value,10);
   if(!date){ alert(T("alert_date")); return; }
   if(isNaN(place) || place<1){ alert(T("alert_place")); return; }
-  minigames.push({ id: Date.now(), date, game, place, ab: isNaN(ab)||ab<0?0:ab });
+  minigames.push({ id: Date.now(), date, game, place, points: isNaN(points)||points<0?0:points, ab: isNaN(ab)||ab<0?0:ab });
   persistMinigames(); renderMinigames();
   document.getElementById("mgPlace").value = "";
+  document.getElementById("mgPoints").value = "";
   document.getElementById("mgAB").value = "";
 }
 function deleteMinigame(id){
@@ -1583,11 +1601,14 @@ function renderMinigames(){
     <td>${new Date(m.date+"T00:00").toLocaleDateString(LOC())}</td>
     <td>${m.game}</td>
     <td>${m.place}.</td>
+    <td>${m.points ? fmtN(m.points) : "–"}</td>
     <td>${fmtN(m.ab)} AB</td>
     <td><button class="danger" title="${T("del")}" onclick="deleteMinigame(${m.id})">✕</button></td>
-  </tr>`).join("") || `<tr><td colspan="5" style="text-align:center;color:var(--muted)">${T("mg_empty")}</td></tr>`;
+  </tr>`).join("") || `<tr><td colspan="6" style="text-align:center;color:var(--muted)">${T("mg_empty")}</td></tr>`;
 
   document.getElementById("mgTotalCell").textContent = T("mgTotal", minigames.length);
+  const totalPts = minigames.reduce((s,m)=>s+(m.points||0),0);
+  document.getElementById("mgTotalPoints").textContent = totalPts ? fmtN(totalPts) : "";
   document.getElementById("mgTotalAB").textContent = fmtN(minigames.reduce((s,m)=>s+m.ab,0))+" AB";
   document.getElementById("mgAvgCell").textContent = minigames.length===0 ? "–" :
     T("mgAvg", (minigames.reduce((s,m)=>s+m.place,0)/minigames.length).toFixed(1));
@@ -1606,14 +1627,14 @@ function renderMinigames(){
     ? T("mg_stats", fmtN(last30), fmtN(last90), fmtN(lastYear), fmtN(allTime))
     : "";
 
-  // Pro-Spiel-Statistik: Anzahl, bester Platz, AB-Summe
+  // Pro-Spiel-Statistik: Anzahl, bester Platz, beste Punkte, AB-Summe
   const byGame = {};
   for(const m of minigames){
-    const g = byGame[m.game] ??= {n:0, best:Infinity, ab:0};
-    g.n++; g.best = Math.min(g.best, m.place); g.ab += m.ab;
+    const g = byGame[m.game] ??= {n:0, best:Infinity, bestPts:0, ab:0};
+    g.n++; g.best = Math.min(g.best, m.place); g.bestPts = Math.max(g.bestPts, m.points||0); g.ab += m.ab;
   }
   document.getElementById("mgSummary").textContent = Object.entries(byGame)
-    .map(([g,s])=>T("mg_summary", g, s.n, s.best, fmtN(s.ab)))
+    .map(([g,s])=>T("mg_summary", g, s.n, s.best, fmtN(s.bestPts), fmtN(s.ab)))
     .join(" • ");
 }
 
@@ -2137,6 +2158,42 @@ function toggleHelp(){
 }
 
 /* ====== Export / Import ====== */
+/* ====== Discord-Share-Code (kompakt, für den Ranglisten-Bot) ======
+   Format v1 (Tilde-getrennt, passt in eine Discord-Nachricht):
+   AE1~parcels~portfolioValue($)~atlasBucks~badges~perDayBoosted($)~mayorAB~minigameAB~expenses~minigamePoints~currency
+   currency = "USD" oder "EUR". Reihenfolge ist der Vertrag mit dem Bot. */
+function buildShareCode(){
+  const r = calc();
+  const mAB = cities.reduce((s,c)=>s+(parseFloat(c.mayorAB)||0),0);
+  const gAB = minigames.reduce((s,m)=>s+(m.ab||0),0);
+  const gPts = minigames.reduce((s,m)=>s+(m.points||0),0);
+  const exp = expenses.reduce((s,x)=>s+(x.amount||0),0);
+  const cur = SETTINGS.currency === "$" ? "USD" : "EUR";
+  return [
+    "AE1",
+    Math.round(r.total),
+    (r.portfolioValue||0).toFixed(2),
+    Math.round(r.ab||0),
+    Math.round(r.badges||0),
+    (r.perDayBoosted||0).toFixed(4),
+    Math.round(mAB),
+    Math.round(gAB),
+    exp.toFixed(2),
+    Math.round(gPts),
+    cur
+  ].join("~");
+}
+function copyShareCode(){
+  const code = buildShareCode();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code)
+      .then(()=> alert(T("share_copied", code)))
+      .catch(()=> prompt(T("share_manual"), code));
+  } else {
+    prompt(T("share_manual"), code);
+  }
+}
+
 function exportData(){
   const data = { version: VERSION, exported: new Date().toISOString(), inputs:{}, checks:{}, snapshots: getSnapshots(), cities, minigames, expenses, payouts, settings: SETTINGS };
   for(const f of FIELDS) data.inputs[f] = document.getElementById(f).value;
