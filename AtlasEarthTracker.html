@@ -482,8 +482,13 @@
 <script>
 "use strict";
 /* ====== Version & Changelog ====== */
-const VERSION = "0.6.0";
+const VERSION = "0.7.0";
 const CHANGELOG = [
+  { v: "0.7.0", de: [
+      "Discord-Code erweitert (AE2): enthält jetzt Zeitraum-Summen (30/90/365 Tage) und Pro-Spiel-Werte – für die detaillierten Ranglisten und Zeiträume im Discord-Bot"
+    ], en: [
+      "Discord code extended (AE2): now includes period sums (30/90/365 days) and per-game values – for the detailed leaderboards and time periods in the Discord bot"
+    ] },
   { v: "0.6.0", de: [
       "Minispiele: erzielte Punkte je Eintrag erfassbar (eigene Spalte, Punkte-Summe, „beste Punkte“ je Spiel)",
       "Neuer Button „Discord-Code“: erzeugt einen kompakten Code mit deinen Ranglisten-Werten für den Atlas-Earth-Discord-Bot (einreichen ohne riesiges JSON)"
@@ -2158,29 +2163,54 @@ function toggleHelp(){
 }
 
 /* ====== Export / Import ====== */
-/* ====== Discord-Share-Code (kompakt, für den Ranglisten-Bot) ======
-   Format v1 (Tilde-getrennt, passt in eine Discord-Nachricht):
-   AE1~parcels~portfolioValue($)~atlasBucks~badges~perDayBoosted($)~mayorAB~minigameAB~expenses~minigamePoints~currency
-   currency = "USD" oder "EUR". Reihenfolge ist der Vertrag mit dem Bot. */
+/* ====== Discord-Share-Code (für den Ranglisten-Bot) ======
+   Format AE2 (Tilde-getrennt; Zeitraum-Summen + Pro-Spiel-Werte). Vertrag mit dem Bot:
+   AE2~cur~parcels~portfolio~ab~badges~perday
+       ~mayor30~mayor90~mayor365~mayorTot
+       ~miniAB30~miniAB90~miniAB365~miniABTot
+       ~miniPts30~miniPts90~miniPts365~miniPtsTot
+       ~exp30~exp90~exp365~expTot
+       ~games   (games = "name,count,bestPlace,bestPoints,abSum;…", kann leer sein)
+   cur = USD|EUR. Zahlen: counts/AB gerundet, Geld 2 NK, perday 4 NK. */
+function periodSums(items, dateKey, valKey){
+  const cut = d => new Date(Date.now()-d*86400000).toISOString().slice(0,10);
+  const c30=cut(30), c90=cut(90), c365=cut(365);
+  let s30=0,s90=0,sY=0,tot=0;
+  for(const it of items){
+    const v = +(it[valKey])||0, dt = it[dateKey];
+    tot+=v; if(dt>=c365)sY+=v; if(dt>=c90)s90+=v; if(dt>=c30)s30+=v;
+  }
+  return [s30,s90,sY,tot];
+}
 function buildShareCode(){
   const r = calc();
-  const mAB = cities.reduce((s,c)=>s+(parseFloat(c.mayorAB)||0),0);
-  const gAB = minigames.reduce((s,m)=>s+(m.ab||0),0);
-  const gPts = minigames.reduce((s,m)=>s+(m.points||0),0);
-  const exp = expenses.reduce((s,x)=>s+(x.amount||0),0);
   const cur = SETTINGS.currency === "$" ? "USD" : "EUR";
+  // Bürgermeister: Perioden aus den datierten Logs, Gesamt aus den Feldsummen (wie auf der Seite)
+  const mayorLog = cities.flatMap(c => Array.isArray(c.mayorLog) ? c.mayorLog : []);
+  const mP = periodSums(mayorLog, "date", "ab");
+  mP[3] = cities.reduce((s,c)=>s+(parseFloat(c.mayorAB)||0),0);
+  const gA = periodSums(minigames, "date", "ab");
+  const gP = periodSums(minigames, "date", "points");
+  const eP = periodSums(expenses, "date", "amount");
+  // Pro-Spiel-Aggregat
+  const byGame = {};
+  for(const m of minigames){
+    const g = byGame[m.game] ??= { n:0, best:Infinity, pts:0, ab:0 };
+    g.n++; g.best = Math.min(g.best, m.place); g.pts = Math.max(g.pts, m.points||0); g.ab += (m.ab||0);
+  }
+  const games = Object.entries(byGame).map(([name,s])=>{
+    const safe = String(name).replace(/[~;,]/g," ").trim().slice(0,24);
+    return [safe, s.n, isFinite(s.best)?s.best:0, Math.round(s.pts), Math.round(s.ab)].join(",");
+  }).join(";");
+  const i = n => Math.round(n);
   return [
-    "AE1",
-    Math.round(r.total),
-    (r.portfolioValue||0).toFixed(2),
-    Math.round(r.ab||0),
-    Math.round(r.badges||0),
-    (r.perDayBoosted||0).toFixed(4),
-    Math.round(mAB),
-    Math.round(gAB),
-    exp.toFixed(2),
-    Math.round(gPts),
-    cur
+    "AE2", cur,
+    i(r.total), (r.portfolioValue||0).toFixed(2), i(r.ab||0), i(r.badges||0), (r.perDayBoosted||0).toFixed(4),
+    i(mP[0]), i(mP[1]), i(mP[2]), i(mP[3]),
+    i(gA[0]), i(gA[1]), i(gA[2]), i(gA[3]),
+    i(gP[0]), i(gP[1]), i(gP[2]), i(gP[3]),
+    eP[0].toFixed(2), eP[1].toFixed(2), eP[2].toFixed(2), eP[3].toFixed(2),
+    games
   ].join("~");
 }
 function copyShareCode(){
